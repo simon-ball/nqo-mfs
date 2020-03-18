@@ -1,6 +1,9 @@
 import numpy as np
 from multiprocessing import Pool as ThreadPool 
+import multiprocessing
 
+
+ncpu = multiprocessing.cpu_count()
 
 
 
@@ -112,14 +115,38 @@ def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
 
 
 
-def plot_vector_B_field_threaded(magnets, axes, centre, limit, projection, points=50, threads=4):
+def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, threads=ncpu):
     '''Produce a 50x50 grid of vector arrows for the magnetic field arising from [magnets]
     It produces a projection of the field based on the 'projection' parameter around the point (centre)
     This function divides the positions and magnets up among multiple threads. It's a dramatic slow down for single magnet (roughly /12 slower) due to 
-    the overhead, but a fairly substantial speedup (x3) for a large number.'''
+    the overhead, but a fairly substantial speedup (x3) for a large number.
+    
+    Parameters
+    ----------
+    magnets : mfs.Magnet or list of mfs.Magnet
+        All magnet sources to include in the calculation. Should be descendents of mfs.Magnet
+    axes : matplotlib.Axes
+        Matplotlib axes objects on which to display the resulting figure
+    centre : np.ndarray
+        Origin of the grid over which the B field is calculated: r=(x, y, z)
+    limit : float
+        half-width of the grid over which B-field is calculated
+        The total grid is calculated as (r-limit, r+limit)
+    projection : str
+        Projection over which to evaluate the B-field, see mfs.helpers.evaluate_axis_projection
+    points : int
+        Number of points along each edge of the grid. Computational complexity scales as O(points^2)
+    threads : int
+        Number of concurrent processes. Defaults to the number of logical CPUs available. 
+        Operates on a single process if given either 0 or 1
+        For a small number of magnets, single-threading is dramatically faster due to the 
+        overhead of spawning new processes. 
+        
+    
+    '''
     if not isinstance(magnets, (list, tuple, np.ndarray)): # if a single magnet is passed to this program, then turn it into a list of magnets for simplicity. 
         magnets = [magnets]
-
+    
     a1p, a2p, a3p = evaluate_axis_projection(projection) # This converts the projection into indicies. e.g. "zxy" will 
                                                          # put (rspace) z along the graph's x axis, (rspace) x along the 
                                                          # graph's y axis, and use a fixed (realspace) y value    
@@ -142,10 +169,15 @@ def plot_vector_B_field_threaded(magnets, axes, centre, limit, projection, point
                 coord[a3p] = centre[a3p]
                 argument = [m, coord, i, j] # i and j are passed to the function (and passed back) so that we do not rely on synchronous threading
                 positions.append(argument)
-    pool = ThreadPool(threads)
-    out = pool.map(plot_vector_B_field_worker, positions)
-    pool.close()
-    pool.join()
+    if not threads or threads == 1:
+        print("Single threaded")
+        out = [plot_vector_B_field_worker(argument) for argument in positions]
+    else:
+        print("Multiprocessing with {} processes".format(threads))
+        pool = multiprocessing.Pool(threads)
+        out = pool.map(plot_vector_B_field_worker, positions)
+        pool.close()
+        pool.join()
     for element in out:
         i = element[1] # recover the i and j indicies to locate this actual value in the grid
         j = element[2]
@@ -157,6 +189,7 @@ def plot_vector_B_field_threaded(magnets, axes, centre, limit, projection, point
     axes.set_aspect('equal', 'datalim')
     axes.set_xlabel("%s [m]" % 'xyz'[a1p])
     axes.set_ylabel("%s [m]" % 'xyz'[a2p])
+    axes.set_title(projection)
     return U, V
 
 

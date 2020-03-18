@@ -139,7 +139,7 @@ class Magnet:
         np.ndarray
             The vector B field at position rDash in the Dashed co-ordinate system
         '''
-        raise NotImplementedError("Must be implemented in geometry-specific class")n
+        raise NotImplementedError("Must be implemented in geometry-specific class")
     
     
     
@@ -164,7 +164,7 @@ class Magnet:
         -------
         null
         '''
-        raise NotImplementedError("Must be implemented in geometry-specific class")n
+        raise NotImplementedError("Must be implemented in geometry-specific class")
 
 
 
