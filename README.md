@@ -4,6 +4,10 @@
 
 Originally written to assist in designing the Ytterbium quantum optics experiment at the University of Southern Denmark (SDU) in 2018. Cleaned up and published in 2020 for use by a project at the Norwegian University of Science and Technology (NTNU)
 
+Install directly from `github` with pip:
+
+    pip install git+https://github.com/simon-ball/nqo-mfs
+
 
 # Usage
 
