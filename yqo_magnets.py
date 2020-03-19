@@ -267,18 +267,14 @@ if __name__ == "__main__":
     points = 50
     ncpu = 8
     
-    mfs.helpers.plot_vector_B_field(magnets2D, ax1, centre=twoDMOTBiasOrigin, points=points, limit=0.03, projection='xy', threads=ncpu)
-    mfs.helpers.plot_vector_B_field(magnets2D, ax2, centre=twoDMOTBiasOrigin, points=points, limit=0.04, projection='zy', threads=ncpu)
-    mfs.helpers.plot_vector_B_field(MOTCoil, ax2, centre=MOTCoilOrigin, points=points, limit=0.07, projection='zy', threads=ncpu)
-    mfs.helpers.plot_vector_B_field(MOTCoil, ax3, centre=MOTCoilOrigin, points=points, limit=0.07, projection='xz', threads=ncpu)
+    mfs.plot_vector_B_field(magnets2D, ax1, centre=twoDMOTBiasOrigin, points=points, limit=0.03, projection='xy', threads=ncpu)
+    mfs.plot_vector_B_field(magnets2D, ax2, centre=twoDMOTBiasOrigin, points=points, limit=0.04, projection='zy', threads=ncpu)
+    mfs.plot_vector_B_field(MOTCoil, ax2, centre=MOTCoilOrigin, points=points, limit=0.07, projection='zy', threads=ncpu)
+    mfs.plot_vector_B_field(MOTCoil, ax3, centre=MOTCoilOrigin, points=points, limit=0.07, projection='xz', threads=ncpu)
     
     thread_stop = time()
     print("Threaded time: %.2f" % (thread_stop - thread_start))
 
-    
-
-    
-    plt.tight_layout()
     
 
     

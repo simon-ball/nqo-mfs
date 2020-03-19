@@ -178,13 +178,13 @@ def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, thr
                 coord[a3p] = centre[a3p]
                 argument = [m, coord, i, j] # i and j are passed to the function (and passed back) so that we do not rely on synchronous threading
                 positions.append(argument)
-    if not threads or threads == 1 or len(magnets) == 1:
+    if not threads or threads == 1:
         print("Single threaded")
         out = [plot_vector_B_field_worker(argument) for argument in positions]
     else:
         # no point in using more processes than jobs:
-        print("Multiprocessing with {} processes".format(min(threads, len(positions))))
-        pool = multiprocessing.Pool(min(threads, len(positions)))
+        print("Multiprocessing with {} processes".format(threads))
+        pool = multiprocessing.Pool(threads)
         out = pool.map(plot_vector_B_field_worker, positions)
         pool.close()
         pool.join()

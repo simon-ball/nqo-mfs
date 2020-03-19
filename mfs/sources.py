@@ -220,9 +220,9 @@ class CircularCoil(Magnet):
             Radius of the coil, to the centre of the conductor
     '''
 
-    def __init__(self, I, rDash, dimsDash, theta, phi=0):
+    def __init__(self, strength, rDash, dimsDash, theta, phi=0):
         super(CircularCoil, self).__init__(rDash, dimsDash, theta, phi)
-        self.I = I
+        self.I = strength
         self.write_magnet_limits()
         pass
         
@@ -327,7 +327,7 @@ class RectangularCoil(Magnet):
     
     Parameters
     ----------
-    I : float
+    strength : float
         Current flowing through coil
     rDash : 3 element list or array
             Position of origin of coil
@@ -335,9 +335,9 @@ class RectangularCoil(Magnet):
         'axDash' : FULL length of coil along the xDash axis
         'azDash' : FULL length of coil along the zDash axis
     '''
-    def __init__(self, I, rDash, dimsDash, theta, phi):
+    def __init__(self, strength, rDash, dimsDash, theta, phi):
         super(RectangularCoil, self).__init__(rDash, dimsDash, theta, phi)
-        self.I = I
+        self.I = strength
         self.write_magnet_limits()
         
     def write_magnet_limits(self):
@@ -436,7 +436,7 @@ class PermanentMagnet(Magnet):
     
     Parameters
     ----------
-        M : float
+        strength : float
             The magnetisation of the magnet, in Tesla per metre
         rDash : list
             The origin of the magnet in the Dashed co-ordinate system
@@ -451,9 +451,9 @@ class PermanentMagnet(Magnet):
         phi : float
             Rotation of the yDash-zDash axis around the X axis in degrees
     '''
-    def __init__(self, M, rDash, dimsDash, theta, phi=0):
+    def __init__(self, strength, rDash, dimsDash, theta, phi=0):
         super(PermanentMagnet, self).__init__(rDash, dimsDash, theta, phi)
-        self.M = M
+        self.M = strength
         self.write_magnet_limits()        
         pass
     
