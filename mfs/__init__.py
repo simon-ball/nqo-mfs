@@ -3,7 +3,7 @@ from . import helpers
 from . import sources
 from . import examples
 
-from helpers import plot_vector_B_field
+from .helpers import plot_vector_B_field
 
 __version__ = "1.0.0"
 
