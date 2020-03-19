@@ -26,7 +26,7 @@ pi = np.pi
 mu0 = 4*pi*1e-7
 
 
-class Magnet:
+class Magnet(object):
     '''A representation of a generic magnetic field source (e.g. permanent magnet,
     solenoid etc). The magnet is defined in its own co-ordinate axis r'=(x',y',z'),
     rotated with respect to the lab frame by theta and phi. 
@@ -68,6 +68,7 @@ class Magnet:
         -------
         null
         '''
+        self.idx = 0
         self.theta = np.radians(theta)
         self.phi = np.radians(phi)
         self.rDash = rDash
@@ -77,6 +78,20 @@ class Magnet:
         # THis is relevant where a single magnet may be plotted as several separate lines in matplotlib
         # i.e. either a rectangular PermanentMagnet or a CoilPair
         pass
+    
+    def __iter__(self):
+        return self
+    def __next__(self):
+        if self.idx == 0:
+            self.idx += 1
+            return self
+        else:
+            self.idx == 0
+            raise StopIteration
+    def __len__(self):
+        return 1
+        
+        
     
     
     
@@ -517,8 +532,6 @@ class PermanentMagnet(Magnet):
         '''Calculate the vector B field resulting from a single permanent magnet 
         at a given position rDash in the Dashed co-ordinate system
         B(rDash) = B(xDash, yDash, zDash)
-        
-        
 
         Parameters
         ----------
@@ -597,6 +610,18 @@ class CoilPair(Magnet):
         self.I = I
         self.handle_text_arguments()
         self.create_magnets()
+    
+    def __next__(self):
+        self.idx += 1
+        try:
+            return self.magnets[self.idx-1]
+        except IndexError:
+            self.idx = 0
+            raise StopIteration
+
+    def __len__(self):
+        return len(self.magnets)
+
         
     def handle_text_arguments(self):
         if self.dimsDash['shape'].lower() in ['circ', 'circular', 'round', 'c', 'spherical', 'cylindrical', 'cylinder']:

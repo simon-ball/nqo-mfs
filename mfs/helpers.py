@@ -146,6 +146,15 @@ def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, thr
     '''
     if not isinstance(magnets, (list, tuple, np.ndarray)): # if a single magnet is passed to this program, then turn it into a list of magnets for simplicity. 
         magnets = [magnets]
+    # The risk with multiprocessing is that completion is contingent on the slowest process
+    # Typically this will be CoilPairs which act like a single magnet, but may contain 10s-100s
+    # Therefore, if any CoilPairs are present, unwrap them into a single flat list containing the individual coils
+    # This is not recursive, it assume there is only 1 level of wrapping, e.g. CoilPairs.
+    # Offers about a 15-20% speedup on YQOMagnets
+    unwrapped_magnets = []
+    for magnet in magnets:
+        for s in magnet:
+            unwrapped_magnets.append(s)
     
     a1p, a2p, a3p = evaluate_axis_projection(projection) # This converts the projection into indicies. e.g. "zxy" will 
                                                          # put (rspace) z along the graph's x axis, (rspace) x along the 
@@ -162,19 +171,20 @@ def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, thr
     positions = [] # This list and the following while loop builds the list at which the B field will be evaluated. 
     for i, a1 in enumerate(axOne): # i and j are indicies for the location of the rspace co-ordinate within the grids X and Y
         for j, a2 in enumerate(axTwo):
-            for m in magnets: # Each magnet is passed in separately, since if the worker has to iterate over the list, it runs into the GIL limitation
+            for m in unwrapped_magnets: # Each magnet is passed in separately, since if the worker has to iterate over the list, it runs into the GIL limitation
                 coord = np.zeros(3)
                 coord[a1p] = a1
                 coord[a2p] = a2
                 coord[a3p] = centre[a3p]
                 argument = [m, coord, i, j] # i and j are passed to the function (and passed back) so that we do not rely on synchronous threading
                 positions.append(argument)
-    if not threads or threads == 1:
+    if not threads or threads == 1 or len(magnets) == 1:
         print("Single threaded")
         out = [plot_vector_B_field_worker(argument) for argument in positions]
     else:
-        print("Multiprocessing with {} processes".format(threads))
-        pool = multiprocessing.Pool(threads)
+        # no point in using more processes than jobs:
+        print("Multiprocessing with {} processes".format(min(threads, len(positions))))
+        pool = multiprocessing.Pool(min(threads, len(positions)))
         out = pool.map(plot_vector_B_field_worker, positions)
         pool.close()
         pool.join()
