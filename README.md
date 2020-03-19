@@ -9,17 +9,23 @@ Originally written to assist in designing the Ytterbium quantum optics experimen
 
 ## Sources
 `mfs` implements four types of magnetic field source:
-    * `mfs.sources.PermanentMagnet` : A cuboid permanent magnet. 
-    * `mfs.sources.CircularCoil` : A single circular loop of wire carrying a current
-    * `mfs.sources.RectangularCoil` : A single rectangualr loop of wire carrying a current
-    * `mfs.sources.CoilPair` : A pair of coils, each containing 1 or more individual coils, either rectangular or circular
+
+- `mfs.sources.PermanentMagnet` : A cuboid permanent magnet.
+
+- `mfs.sources.CircularCoil` : A single circular loop of wire carrying a current
+
+- `mfs.sources.RectangularCoil` : A single rectangualr loop of wire carrying a current
+
+- `mfs.sources.CoilPair` : A pair of coils, each containing 1 or more individual coils, either rectangular or circular
 
 ## Geometry
 Each magnetic field source is generated in their own frame of reference (referred to by dashes throughout), controlled by two angles, `theta` and `phi`. All angles are handled in degrees. 
-    - `theta` : azimuthal angle
-      If `phi` is 0°, then `theta` corresponds to a rotation of the X'-Y' plane around the Z = Z' axis
-    - `phi` : polar angle
-      If `theta` is 0°, then `phi` corresponds to a rotation of the Y'-Z' plane around the X = X' axis
+
+- `theta` : azimuthal angle
+  If `phi` is 0°, then `theta` corresponds to a rotation of the X'-Y' plane around the Z = Z' axis
+  
+- `phi` : polar angle
+  If `theta` is 0°, then `phi` corresponds to a rotation of the Y'-Z' plane around the X = X' axis
 
 Rectangular magnet field sources are always square to the X'-Y'-Z' axes
 
@@ -30,8 +36,12 @@ Rotations are implemented around the (0,0,0) origin. Rotations around arbitrary 
 
 ## Magnetic axis
 `mfs` uses the convention that the magnetisation points along the +ve Y' axis: 
-    - permanent magnets have their magnetisation pointing along the Y' axis
-    - Circular and rectangular magnets are in the X'-Z' plane, wrapped around the Y' axis
+
+- permanent magnets have their magnetisation pointing along the Y' axis
+
+- Circular and rectangular magnets are in the X'-Z' plane, wrapped around the Y' axis
+
+- A negative value for strength reverses the direction
 
 ## Units
 SI units are used throught - distances are in metres, current is in Teslas, current in Amps, and magnetisation in Tesla/metres
@@ -43,21 +53,21 @@ Angles are always in degrees.
 Each geometry specific magnet class is based on a generic template:
     
     magnet = mfs.sources.MagnetClass(strength, rDash, dimsDash, theta, phi)
-    
+
 where:
-`strength` : float
+- `strength` : float
     Magnetisation or current
-`rDash`
+- `rDash`
     Origin (centre) of the magnet **in the frame of the magnet**, i.e. rotated by `theta` and `phi` with respect to the laboratory frame
-`dimsDash`
+- `dimsDash`
     Dictionary of magnet specific parameters
-`theta`, `phi` : float  
+- `theta`, `phi` : float  
     Angle of the magnet frame of reference with respect to the laboratory frame of reference
 
 ### PermanentMagnet
-`strength` is given in Tesla/metre
+- `strength` is given in Tesla/metre
 
-`dimsDash` requires the following keywords:
+- `dimsDash` requires the following keywords:
     - `"axDash"` : float
         Full length of the magnet in metres in the X' direction
     - `"ayDash"` : float
@@ -67,29 +77,29 @@ where:
 
 
 ### CircularCoil
-`strength` is given in Amps. Positive current implies current flowing such that the magnetisation is in the +ve Y' direction. Provide a negative current to reverse the direction
+- `strength` is given in Amps. 
 
-`dimsDash` requires the following keywords:
+- `dimsDash` requires the following keywords:
     - `radius` : float
         Radius of the coil, from origin to centre of conductor
 
 ### RectangularCoil
-`strength` is given in Amps. Positive current implies current flowing such that the magnetisation is in the +ve Y' direction. Provide a negative current to reverse the direction
+- `strength` is given in Amps.
 
-`dimsDash` requires the following keywords:
+- `dimsDash` requires the following keywords:
     - `"axDash"` : float
         Full length of the coil in metres in the X' direction, from conductor-centre to conductor-centre
     - `"azDash"` : float
         Full length of the coil in metres in the z' direction, from conductor-centre to conductor-centre
 
 ### CoilPair
-`strength` is given in Amps. Positive current implies current flowing such that the magnetisation is in the +ve Y' direction, away from the origin. Provide a negative current to reverse the direction
+- `strength` is given in Amps. Positive current implies current flowing such that the magnetisation is in the +ve Y' direction, away from the origin. Provide a negative current to reverse the direction
 
-dimsDash requires the following keywords **in addition to** the geometry specific keywords given above:
+- dimsDash requires the following keywords **in addition to** the geometry specific keywords given above:
     - `"shape"` : str
         All coils are circular or rectangular. Accepted values are `circ`, `rect` and some variations Relevant circular or rectangular parameters given above are required in addition to keywords below
     - `"configuration"` : strength
-        Helmholtz or anti-helmholtz. Accepted values are `hh`, `ahh`, and some variations. Assuming the `ahh` and that `strength` is positive, then the magnetisiation will flow out from the coil origin along the Y' axis, and return in the X'-Z' plane.
+        Helmholtz or anti-Helmholtz. Accepted values are `hh`, `ahh`, and some variations. Assuming the `ahh` and that `strength` is positive, then the magnetisation will flow out from the coil origin along the Y' axis, and return in the X'-Z' plane.
     - `"full spacing"` : float
         Distance in metres along the Y' axis between the origins of the top and bottom coils. If `spatially distributed` is `True`, then this is the **closest distance from conductor-centre to conductor-centre**. 
     - `"axial layers"` : int
