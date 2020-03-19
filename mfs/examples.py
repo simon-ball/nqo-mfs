@@ -1,10 +1,8 @@
 import numpy as np
-import multiprocessing
 import matplotlib.pyplot as plt
 from . import sources
 from . import helpers
 
-ncpu = multiprocessing.cpu_count()
 
 def permanent_magnets():
     '''Create a pair of permanent magnets, some distance away from the origin
@@ -36,9 +34,9 @@ def permanent_magnets():
     '''Note! Axes 2 and 3 can be a little bit confusing - because you're plotted the 2D projection of the magnets
     and then overlaying that with the vector B-field in the zy, xz PLANES. The magnets are drawn AS IF THEY WERE IN 
     those planes, but they AREN'T, they are out of plane'''
-    helpers.plot_vector_B_field(magnets, ax1, centre=[0,0,0], points=20, limit=0.05, projection='xy', threads=ncpu)
-    helpers.plot_vector_B_field(magnets, ax2, centre=[0,0,0], points=20, limit=0.1, projection='zy', threads=ncpu)
-    helpers.plot_vector_B_field(magnets, ax3, centre=[0,0,0], points=20, limit=0.1, projection='xz', threads=ncpu)
+    helpers.plot_vector_B_field(magnets, ax1, centre=[0,0,0], points=20, limit=0.05, projection='xy', threads=helpers.ncpu)
+    helpers.plot_vector_B_field(magnets, ax2, centre=[0,0,0], points=20, limit=0.1, projection='zy', threads=helpers.ncpu)
+    helpers.plot_vector_B_field(magnets, ax3, centre=[0,0,0], points=20, limit=0.1, projection='xz', threads=helpers.ncpu)
     plt.show()
     
 def rectangular_coil_pair():
@@ -62,8 +60,8 @@ def rectangular_coil_pair():
     mag.plot_magnet_position(ax1, 'xy')
     mag.plot_magnet_position(ax2, 'zy')
     mag.plot_magnet_position(ax3, 'xz')
-    helpers.plot_vector_B_field(mag, ax1, centre=[0,0,0], points=20, limit=0.05, projection='xy', threads=ncpu)
-    helpers.plot_vector_B_field(mag, ax2, centre=[0,0,0], points=20, limit=0.1, projection='zy', threads=ncpu)
+    helpers.plot_vector_B_field(mag, ax1, centre=[0,0,0], points=20, limit=0.05, projection='xy', threads=helpers.ncpu)
+    helpers.plot_vector_B_field(mag, ax2, centre=[0,0,0], points=20, limit=0.1, projection='zy', threads=helpers.ncpu)
     plt.show()
     
     
@@ -92,9 +90,9 @@ def circular_coil_pair():
     mag.plot_magnet_position(ax1, 'xy')
     mag.plot_magnet_position(ax2, 'zy')
     mag.plot_magnet_position(ax3, 'xz')
-    helpers.plot_vector_B_field(mag, ax1, centre=origin, points=10, limit=0.1, projection='xy', threads=ncpu)
-    helpers.plot_vector_B_field(mag, ax2, centre=origin, points=10, limit=0.1, projection='zy', threads=ncpu)
-    helpers.plot_vector_B_field(mag, ax3, centre=origin, points=10, limit=0.1, projection='xz', threads=ncpu)
+    helpers.plot_vector_B_field(mag, ax1, centre=origin, points=10, limit=0.1, projection='xy', threads=helpers.ncpu)
+    helpers.plot_vector_B_field(mag, ax2, centre=origin, points=10, limit=0.1, projection='zy', threads=helpers.ncpu)
+    helpers.plot_vector_B_field(mag, ax3, centre=origin, points=10, limit=0.1, projection='xz', threads=helpers.ncpu)
     plt.show()
 
     
