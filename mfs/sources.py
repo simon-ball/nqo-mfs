@@ -69,8 +69,8 @@ class Magnet(object):
         null
         '''
         self.idx = 0
-        self.theta = np.radians(theta)
-        self.phi = np.radians(phi)
+        self._theta = theta
+        self._phi = phi
         self.rDash = rDash
         self.dimsDash = dimsDash.copy()
         self.fmat = random.sample(['b', 'g', 'r', 'c', 'm', 'y', 'k'], 1)[0] + '-'
@@ -90,8 +90,33 @@ class Magnet(object):
             raise StopIteration
     def __len__(self):
         return 1
-        
-        
+    
+    @property
+    def theta_deg(self):
+        '''Return Theta in degrees'''
+        return self._theta
+    @property
+    def theta(self):
+        '''return Theta in radians'''
+        return np.radians(self._theta)
+    
+    @theta.setter
+    def theta(self, _theta):
+        self._theta = _theta
+    
+    @property
+    def phi_deg(self):
+        '''return phi in degrees'''
+        return self._phi
+    @property
+    def phi(self):
+        '''return phi in radians'''
+        return np.radians(self._phi)
+    
+    @phi.setter
+    def phi(self, _phi):
+        self._phi = _phi
+    
     
     
     
@@ -386,9 +411,9 @@ class RectangularCoil(Magnet):
             # And in the one case where Misiakin has (-1)**alpha (only in his eq. 4), I use P=(-1)**(alpha+1)
             Q = (-1) ** alpha
             P = (-1) ** (alpha+1)
-            BxDash += (Q * yD) / (t[alpha] * (t[alpha]*d[alpha]))
-            BzDash += (Q*yD) / (t[alpha] * (t[alpha] + (Q*C[alpha])))
-            ByDash_term1 = (P * d[alpha]) / (t[alpha] * (t[alpha] + (Q*C[alpha])))
+            BxDash += (Q * yD) / (t[alpha] * (t[alpha] + d[alpha]))
+            BzDash += (Q * yD) / (t[alpha] * (t[alpha] + (Q*C[alpha])))
+            ByDash_term1 = (P * d[alpha]) / (t[alpha] * (t[alpha] + (Q * C[alpha])))
             ByDash_term2 = -C[alpha] / (t[alpha] * (t[alpha] + d[alpha]))
             ByDash += ByDash_term1 + ByDash_term2
         BDash = prefactor * np.array( [BxDash, ByDash, BzDash] )
@@ -583,20 +608,19 @@ class CoilPair(Magnet):
             full spacing between closest coils along yDash axis
         spatially distributed' : bool
             Should the programme calculate for each loop independently, or approximate by placing all coils in the same place?
-        radius : float
-            radius of round coils
-        axDash : float
-            half length of rectangular coil along xDash axis
-        ayDash : float
-            half length of rectangular coil along zDash axis
         axial layers : int
             number of new layers further out along the yDash axis
+        axial spacing : float
+            distance between centres of layers in the axial direction
         radial layers : int
             number of new layers further out away from yDash axis
+        radial spacing : float
+            distance between centres of layers in the radial direction
         configuration : str
             Valid entries are 'ahh', 'hh' and some variations
         shape : str
             Valid entries are variations on 'circ', 'circular', 'rectangular', 'r', etc
+        Plus whatever arguments are necessary for Rectangular or Circular coils (see help for those classes)
     theta
         float. Rotation of Dash system around Z axis
     phi
@@ -605,11 +629,12 @@ class CoilPair(Magnet):
         '''
     def __init__(self, I, rDash, dimsDash, theta, phi):
         super(CoilPair, self).__init__(rDash, dimsDash, theta, phi)
-        self.theta = theta  # Explicitly overwrite the values stored by super.init
-        self.phi = phi      #  - otherwise we convert to radians multiple times!
         self.I = I
         self.handle_text_arguments()
         self.create_magnets()
+    
+    @property
+    
     
     def __next__(self):
         self.idx += 1
@@ -659,8 +684,8 @@ class CoilPair(Magnet):
             n = self.dimsDash['axial layers'] * self.dimsDash['radial layers']
             upper_origin = [self.rDash[0], self.rDash[1] + self.half_spacing, self.rDash[2]]
             lower_origin = [self.rDash[0], self.rDash[1] - self.half_spacing, self.rDash[2]]
-            upper_coil = self.shape(self.I*n, upper_origin, self.dimsDash, self.theta, self.phi) # For overlapped coils, simply implement 1 turn with N* higher current in it.
-            lower_coil = self.shape(self.I*n*self.conf, lower_origin, self.dimsDash, self.theta, self.phi) # Invert current direction via self.conf for AHH coils
+            upper_coil = self.shape(self.I*n, upper_origin, self.dimsDash, self.theta_deg, self.phi_deg) # For overlapped coils, simply implement 1 turn with N* higher current in it.
+            lower_coil = self.shape(self.I*n*self.conf, lower_origin, self.dimsDash, self.theta_deg, self.phi_deg) # Invert current direction via self.conf for AHH coils
             self.magnets.append(upper_coil)
             self.magnets.append(lower_coil)
         else:
@@ -682,8 +707,8 @@ class CoilPair(Magnet):
                     params['half spacing'] = self.half_spacing + a*ySpacing
                     params['axDash'] += b * radSpacing
                     params['radius'] += b * radSpacing
-                    self.magnets.append(self.shape(self.I, upper_origin, params, self.theta, self.phi))
-                    self.magnets.append(self.shape(self.I*self.conf, lower_origin, params, self.theta, self.phi))
+                    self.magnets.append(self.shape(self.I, upper_origin, params, self.theta_deg, self.phi_deg))
+                    self.magnets.append(self.shape(self.I*self.conf, lower_origin, params, self.theta_deg, self.phi_deg))
         pass
                     
     def get_BDash_field(self, rDash):
