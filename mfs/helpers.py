@@ -10,26 +10,148 @@ ncpu = multiprocessing.cpu_count()
 
 
 def rotate_around_z(theta):
+    '''Calculcate the rotation matrix to rotate around the Z-axis by angle theta
+    (radians)
+    
+    Parameters
+    ----------
+    theta : float
+        Rotation angle in radians
+    
+    Returns
+    -------
+    np.ndarray
+        3x3 array. May be multiplied with a 3-element vector to rotate that
+        vector around the Z-axis by theta
+    '''
     return np.array(
         [
-            [np.cos(theta), np.sin(theta), 0],
-            [-np.sin(theta), np.cos(theta), 0],
+            [np.cos(theta), -np.sin(theta), 0],
+            [np.sin(theta), np.cos(theta), 0],
             [0, 0, 1],
         ]
     )
 
 
 def rotate_around_x(phi):
+    '''Calculcate the rotation matrix to rotate around the X-axis by angle phi
+    (radians)
+    
+    Parameters
+    ----------
+    phi : float
+        Rotation angle in radians
+    
+    Returns
+    -------
+    np.ndarray
+        3x3 array. May be multiplied with a 3-element vector to rotate that
+        vector around the X-axis by theta
+    '''
     return np.array(
-        [[1, 0, 0], [0, np.cos(phi), -np.sin(phi)], [0, np.sin(phi), np.cos(phi)]]
+        [
+            [1, 0, 0],
+            [0, np.cos(phi), -np.sin(phi)],
+            [0, np.sin(phi), np.cos(phi)]
+        ]
     )
 
 
 def rotate_to_dashed_frame(r, theta, phi):
+    '''
+    Rotate the 3-element vector `r` around the X-axis by `phi`, and then
+    around the Z-axis by `theta`, where `theta` and `phi are _extrinsic_ angles.
+    The angles remain relative to the global frame, regardless of how many rotations
+    are performed.
+    
+    The order is relevant, consider the following example, in which we rotate 
+    the y-unit-vector (0,1,0) first by phi=45°, and second by theta=90°. 
+    The first rotation, around X, should give us a diagonal in the YZ plane, i.e. 1/sqrt(2) (0, 1, 1).
+    The second rotation takes that diagonal, and rotates it around Z into the XZ plane, to 1/sqrt(2) (-1, 0, 1)    
+    Single, discrete steps:
+    >>> unit_y = np.array([0,1,0])
+    ... stage_1a = rotate_to_dashed_frame(unit_y, theta=0, phi=np.radians(45))
+    ... stage_1a
+    array(0, 0.7071, 0.7071 )
+    
+    >>> stage_2a = rotate_to_dashed_frame(stage_1a, theta=np.radians(90), phi=0)
+    ... stage_2a
+    array(-0.7071, 0, 0.7071)
+    
+    We can consider what the outcome would be if the rotation occurred in the reverse
+    order: i.e. the y-unit-vector rotated first by theta=90° and then by phi=45°
+    The first rotation, around Z, should give us (-1, 0, 0)
+    The second rotation, around X, should then have no effect at all, because the vector is on the x-axis.
+    >>> unit_y = np.array([0,1,0])
+    ... stage_1b = rotate_to_dashed_frame(unit_y, theta=np.radians(90), phi=0)
+    ... stage_1b
+    array(-1, 0, 0)
+    >>> stage_2b = rotate_to_dashed_frame(stage_1b, theta=0, phi=np.radians(45))
+    ... stage_2b
+    array(-1, 0, 0)
+    
+    We can verify that thisfunction behaves in the order shown by the first case
+    in two ways: 
+        1) by examining the matrix multiplication implemented
+        2) By comparing the outcome to the two examples given
+    >>> rotate_to_dashed_frame(unit_y, theta=np.radians(90), phi=np.radians(45))
+    array (-0.7071, 0, 0.7071)
+    
+    As we can see, the outcome matches the example given first, i.e. X then Y.
+    
+    Parameters
+    ----------
+    r : array-like
+        Vector to rotate, must be 3 elements.
+    theta : float
+        Angle (in radians) to rotate around the Z-axis
+    phi : float
+        Angle (in radians) to rotate around the X-axis
+    
+    Returns
+    -------
+    np.ndarray
+        Rotated array
+    '''
     return np.dot(np.dot(rotate_around_z(theta), rotate_around_x(phi)), r)
 
 
 def rotate_to_normal_frame(rDash, theta, phi):
+    '''
+    Rotate the 3-element array rDash, that exists in the dashed frame defined by
+    theta and phi, back into the global frame. 
+    
+    The inverse transformation to `rotate_to_dashed_frame`. The arguments `theta`
+    and `phi` should be given as the same values used to transform to the dashed
+    frame to begin with - i.e. these are the angles that define the _dashed frame_,
+    and not the _transformation_
+    
+    Note: in this case, `theta` and `phi` can be thought of as the angles that
+    define the _dashed_ frame, rather than the angle that must be rotated to
+    return there. 
+    
+    >>> unit_y = np.array([0,1,0])
+    ... theta = np.radians(30)
+    ... phi = np.radians(45)
+    ... unit_y_dash = rotate_to_dashed_frame(unit_y, theta, phi)
+    ... unit_y_dash
+    np.array( -0.3536, 0.6123, 0.7071)
+    >>> rotate_to_normal_frame(unit_y_dash, theta, phi)
+    np.array(0, 1, 0)
+    >>> rotate_to_dashed_frame(unit_y_dash, -theta, -phi)
+    np.array(-0.6124, -0.25, 0.75)
+    
+    
+    Parameters
+    ----------
+    rDash : array-like
+        Vector in Dashed frame to transform back to global frame
+    theta : float
+        angle (in radians) that defines the dashed frame rotation around the Z axis
+    phi : float
+        angle (in radians) that defines the dashed frame rotation around the X axis
+    
+    '''
     return np.dot(np.dot(rotate_around_x(-phi), rotate_around_z(-theta)), rDash)
 
 
