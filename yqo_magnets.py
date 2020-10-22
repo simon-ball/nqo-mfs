@@ -264,7 +264,7 @@ if __name__ == "__main__":
 
 
     thread_start = time()
-    points = 50
+    points = 20
     ncpu = 8
     
     mfs.plot_vector_B_field(magnets2D, ax1, centre=twoDMOTBiasOrigin, points=points, limit=0.03, projection='xy', threads=ncpu)
