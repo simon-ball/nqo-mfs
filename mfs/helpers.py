@@ -219,6 +219,13 @@ def evaluate_axis_projection(projection):
 
 
 def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
+    '''
+    Plot the magnitude of the B field along an axis defined by `projection` and `limit`
+    '''
+    if not isinstance(centre, np.ndarray):
+        centre = np.array(centre)
+    if not isinstance(magnets, (list, tuple, np.ndarray)):
+        magnets = (magnets,)
     a1p, a2p, a3p = evaluate_axis_projection(
         projection
     )  # This converts the projection into indicies. Here, we only care about the first index, the 2nd and 3rd are just dummies
@@ -273,7 +280,7 @@ def plot_vector_B_field(
     if not isinstance(
         magnets, (list, tuple, np.ndarray)
     ):  # if a single magnet is passed to this program, then turn it into a list of magnets for simplicity.
-        magnets = [magnets]
+        magnets = (magnets,)
     # The risk with multiprocessing is that completion is contingent on the slowest process
     # Typically this will be CoilPairs which act like a single magnet, but may contain 10s-100s
     # Therefore, if any CoilPairs are present, unwrap them into a single flat list containing the individual coils
