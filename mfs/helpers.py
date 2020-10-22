@@ -11,7 +11,7 @@ ncpu = multiprocessing.cpu_count()
 
 
 def rotate_around_z(theta):
-    '''Calculcate the rotation matrix to rotate around the Z-axis by angle theta
+    """Calculcate the rotation matrix to rotate around the Z-axis by angle theta
     (radians)
     
     Parameters
@@ -24,7 +24,7 @@ def rotate_around_z(theta):
     np.ndarray
         3x3 array. May be multiplied with a 3-element vector to rotate that
         vector around the Z-axis by theta
-    '''
+    """
     return np.array(
         [
             [np.cos(theta), -np.sin(theta), 0],
@@ -35,7 +35,7 @@ def rotate_around_z(theta):
 
 
 def rotate_around_x(phi):
-    '''Calculcate the rotation matrix to rotate around the X-axis by angle phi
+    """Calculcate the rotation matrix to rotate around the X-axis by angle phi
     (radians)
     
     Parameters
@@ -48,18 +48,14 @@ def rotate_around_x(phi):
     np.ndarray
         3x3 array. May be multiplied with a 3-element vector to rotate that
         vector around the X-axis by theta
-    '''
+    """
     return np.array(
-        [
-            [1, 0, 0],
-            [0, np.cos(phi), -np.sin(phi)],
-            [0, np.sin(phi), np.cos(phi)]
-        ]
+        [[1, 0, 0], [0, np.cos(phi), -np.sin(phi)], [0, np.sin(phi), np.cos(phi)]]
     )
 
 
 def rotate_to_dashed_frame(r, theta, phi):
-    '''
+    """
     Rotate the 3-element vector `r` around the X-axis by `phi`, and then
     around the Z-axis by `theta`, where `theta` and `phi are _extrinsic_ angles.
     The angles remain relative to the global frame, regardless of how many rotations
@@ -113,12 +109,12 @@ def rotate_to_dashed_frame(r, theta, phi):
     -------
     np.ndarray
         Rotated array
-    '''
+    """
     return np.dot(np.dot(rotate_around_z(theta), rotate_around_x(phi)), r)
 
 
 def rotate_to_normal_frame(rDash, theta, phi):
-    '''
+    """
     Rotate the 3-element array rDash, that exists in the dashed frame defined by
     theta and phi, back into the global frame. 
     
@@ -152,7 +148,7 @@ def rotate_to_normal_frame(rDash, theta, phi):
     phi : float
         angle (in radians) that defines the dashed frame rotation around the X axis
     
-    '''
+    """
     return np.dot(np.dot(rotate_around_x(-phi), rotate_around_z(-theta)), rDash)
 
 
@@ -220,9 +216,9 @@ def evaluate_axis_projection(projection):
 
 
 def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
-    '''
+    """
     Plot the magnitude of the B field along an axis defined by `projection` and `limit`
-    '''
+    """
     if not isinstance(centre, np.ndarray):
         centre = np.array(centre)
     if not isinstance(magnets, (list, tuple, np.ndarray)):
@@ -293,7 +289,6 @@ def plot_vector_B_field(
             unwrapped += magnet.magnets
         else:
             unwrapped.append(magnet)
-    
 
     a1p, a2p, a3p = evaluate_axis_projection(
         projection
@@ -398,11 +393,12 @@ def print_field_gradient(magnets, centre, label=""):
         % (label, ((B2abs - B0abs) * 1e4 / (delta / 1e-2)))
     )
 
+
 def get_axes_ndim(axes):
-    '''
+    """
     Quick function to determine if an Axes object is 3D (can accept x, y, z data)
     or 2d (can only accept x, y data)
-    '''
+    """
     if hasattr(axes, "get_zlim"):
         n = 3
     else:

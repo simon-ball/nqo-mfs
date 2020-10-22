@@ -213,7 +213,12 @@ class Magnet(object):
         if helpers.get_axes_ndim(axes) == 2:
             axes.plot(self.coordinates[a1p], self.coordinates[a2p], self.fmat)
         elif helpers.get_axes_ndim(axes) == 3:
-            axes.plot(self.coordinates[a1p], self.coordinates[a2p], self.coordinates[a3p], self.fmat)
+            axes.plot(
+                self.coordinates[a1p],
+                self.coordinates[a2p],
+                self.coordinates[a3p],
+                self.fmat,
+            )
         return
 
 
@@ -317,7 +322,6 @@ class CircularCoil(Magnet):
         return np.array([BxDash, ByDash, BzDash])
 
 
-
 class RectangularCoil(Magnet):
     """A representation of a single rectangular EM coil. The coil is defined as
     having its origin at rDash=(x',y',z') and its axis along the yDash axis. A
@@ -364,7 +368,7 @@ class RectangularCoil(Magnet):
                 self.rDash[1],
                 self.rDash[2] - (b[i] * self.azD),
             ]
-            self.coordinates[:,i] = self.rotate_to_normal_frame(np.array(c))
+            self.coordinates[:, i] = self.rotate_to_normal_frame(np.array(c))
 
     def get_BDash_field(self, rDash):
         """Get the (x', y', z') components of the B field at position 
@@ -409,7 +413,6 @@ class RectangularCoil(Magnet):
             ByDash += ByDash_term1 + ByDash_term2
         BDash = prefactor * np.array([BxDash, ByDash, BzDash])
         return BDash
-
 
 
 class PermanentMagnet(Magnet):
@@ -537,12 +540,12 @@ class PermanentMagnet(Magnet):
         pass
 
     def plot_magnet_position(self, axes, projection):
-        '''The parent class approach can be shared by the coils, but the
+        """The parent class approach can be shared by the coils, but the
         permanent magnet needs a different approach to generate the full 3D 
-        model'''
+        model"""
         a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
         ndim = helpers.get_axes_ndim(axes)
-        if  ndim== 2:
+        if ndim == 2:
             for face in self.faces:
                 axes.plot(face[a1p], face[a2p], self.fmat)
             axes.arrow(
@@ -556,7 +559,6 @@ class PermanentMagnet(Magnet):
                 axes.plot(face[a1p], face[a2p], face[a3p], self.fmat)
             # arrows not currently supported in 3D
         return
-
 
     def get_BDash_field(self, rDash):
         """Calculate the vector B field resulting from a single permanent magnet 
