@@ -191,21 +191,30 @@ class Magnet(object):
     def plot_magnet_position(self, axes, projection):
         """Plot the outline of the magnet on the provided axes
         
-        This only plots the 2D outline - e.g. an arbitrarily rotated cuboid will
-        appear to be hexagonal. This function is geometry specific and must be
-        implemented in the subclass
+        If the axes are 2D, it will only plot the outline of the magnet as
+        projected by the `projection` keyword. For example, a coil in the XY
+        plane will appear to be a line with the projection `xy`
+        
+        If the axes are 3d, then all 3 dimensions will be plotted. 
         
         Parameters
         ----------
         axes : matplotlib.axes._subplots.AxesSubplot
-            The pyplot axis on which the outline will be drawn. Can be produced
-            by, e.g. `fig, axes = plt.subplots()`
+            The pyplot axis on which the outline will be drawn. Can be produced by, e.g.
+                fig, axes = plt.subplots()
         projection : str
             The plane into which the outline is being projected
             Accepted values are 2 letters out of 'xyz', with the first letter
             giving the real space axis of the graph's x-axis
+
         """
-        raise NotImplementedError("Must be implemented in geometry-specific class")
+        # self.coordinates must be provided by the geometry-specific class
+        a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
+        if helpers.get_axes_ndim(axes) == 2:
+            axes.plot(self.coordinates[a1p], self.coordinates[a2p], self.fmat)
+        elif helpers.get_axes_ndim(axes) == 3:
+            axes.plot(self.coordinates[a1p], self.coordinates[a2p], self.coordinates[a3p], self.fmat)
+        return
 
 
 class CircularCoil(Magnet):
@@ -307,29 +316,6 @@ class CircularCoil(Magnet):
             BzDash = (zDash / r) * B_radial
         return np.array([BxDash, ByDash, BzDash])
 
-    def plot_magnet_position(self, axes, projection):
-        """Plot the outline of the magnet on the provided axes
-        
-        This only plots the 2D outline - e.g. an arbitrarily rotated cuboid will appear to be hexagonal
-        This function is geometry specific and must be implemented in the subclass
-        
-        Parameters
-        ----------
-        axes : matplotlib.axes._subplots.AxesSubplot
-            The pyplot axis on which the outline will be drawn. Can be produced by, e.g.
-                fig, axes = plt.subplots()
-        projection : str
-            The plane into which the outline is being projected
-            Accepted values are 2 letters out of 'xyz', with the first letter
-            giving the real space axis of the graph's x-axis
-            
-        Returns
-        -------
-        null
-        """
-        a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
-        axes.plot(self.coordinates[a1p], self.coordinates[a2p], self.fmat)
-        pass
 
 
 class RectangularCoil(Magnet):
@@ -349,7 +335,6 @@ class RectangularCoil(Magnet):
           the principle axis, and not Z
         * Due to Python zero-indexing arrays, the use of (-1)**alpha changes
           slightly
-
     
     Parameters
     ----------
@@ -370,7 +355,7 @@ class RectangularCoil(Magnet):
     def write_magnet_limits(self):
         self.axD = self.dimsDash["axDash"] / 2
         self.azD = self.dimsDash["azDash"] / 2
-        self.corners = np.zeros((5, 3))
+        self.coordinates = np.zeros((3, 5))
         a = (1, 1, -1, -1, 1)
         b = (1, -1, -1, 1, 1)
         for i in range(5):
@@ -379,8 +364,7 @@ class RectangularCoil(Magnet):
                 self.rDash[1],
                 self.rDash[2] - (b[i] * self.azD),
             ]
-            self.corners[i, :] = self.rotate_to_normal_frame(np.array(c))
-        self.coordinates = self.corners.T
+            self.coordinates[:,i] = self.rotate_to_normal_frame(np.array(c))
 
     def get_BDash_field(self, rDash):
         """Get the (x', y', z') components of the B field at position 
@@ -426,27 +410,6 @@ class RectangularCoil(Magnet):
         BDash = prefactor * np.array([BxDash, ByDash, BzDash])
         return BDash
 
-    def plot_magnet_position(self, axes, projection):
-        """Plot the outline of the magnet on the provided axes
-        
-        This only plots the 2D outline - e.g. an arbitrarily rotated cuboid will
-        appear to be hexagonal. This function is geometry specific and must be 
-        implemented in the subclass
-        
-        Parameters
-        ----------
-        axes : matplotlib.axes._subplots.AxesSubplot
-            The pyplot axis on which the outline will be drawn. Can be produced by, e.g.
-                fig, axes = plt.subplots()
-        projection : str
-            The plane into which the outline is being projected
-            Accepted values are 2 letters out of 'xyz', with the first letter
-            giving the real space axis of the graph's x-axis
-
-        """
-        a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
-        axes.plot(self.corners[:, a1p], self.corners[:, a2p], self.fmat)
-        pass
 
 
 class PermanentMagnet(Magnet):
@@ -538,9 +501,9 @@ class PermanentMagnet(Magnet):
         a = (1, 1, -1, -1, 1)
         b = (1, -1, -1, 1, 1)
         face1 = np.zeros((5, 3))
-        face2 = np.zeros((5, 3))
-        face3 = np.zeros((5, 3))
-        face4 = np.zeros((5, 3))
+        face2 = face1.copy()
+        face3 = face1.copy()
+        face4 = face1.copy()
         for i in range(5):
             c1 = [
                 self.rDash[0] + (a[i] * self.axD),
@@ -561,7 +524,9 @@ class PermanentMagnet(Magnet):
         face4[2] = face2[3]
         face4[3] = face2[2]
         face4[4] = face1[2]
-        self.faces = [face1, face2, face3, face4]
+        self.faces = [face1.T, face2.T, face3.T, face4.T]
+        # Easier to write the `faces` this way
+        # Easier to read from them once transposed
         arrow_start = self.rotate_to_normal_frame(
             np.array([self.rDash[0], self.rDash[1], self.rDash[2]])
         )
@@ -572,17 +537,26 @@ class PermanentMagnet(Magnet):
         pass
 
     def plot_magnet_position(self, axes, projection):
-        """Intended to supersede the hardcoded projections"""
+        '''The parent class approach can be shared by the coils, but the
+        permanent magnet needs a different approach to generate the full 3D 
+        model'''
         a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
-        for face in self.faces:
-            axes.plot(face[:, a1p], face[:, a2p], self.fmat)
-        axes.arrow(
-            self.arrow[0][a1p],
-            self.arrow[0][a2p],
-            self.arrow[1][a1p],
-            self.arrow[1][a2p],
-        )
-        pass
+        ndim = helpers.get_axes_ndim(axes)
+        if  ndim== 2:
+            for face in self.faces:
+                axes.plot(face[a1p], face[a2p], self.fmat)
+            axes.arrow(
+                self.arrow[0][a1p],
+                self.arrow[0][a2p],
+                self.arrow[1][a1p],
+                self.arrow[1][a2p],
+            )
+        elif ndim == 3:
+            for face in self.faces:
+                axes.plot(face[a1p], face[a2p], face[a3p], self.fmat)
+            # arrows not currently supported in 3D
+        return
+
 
     def get_BDash_field(self, rDash):
         """Calculate the vector B field resulting from a single permanent magnet 
