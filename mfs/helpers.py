@@ -2,6 +2,7 @@ import numpy as np
 from multiprocessing import Pool as ThreadPool
 import multiprocessing
 
+from . import sources
 
 ncpu = multiprocessing.cpu_count()
 
@@ -286,10 +287,13 @@ def plot_vector_B_field(
     # Therefore, if any CoilPairs are present, unwrap them into a single flat list containing the individual coils
     # This is not recursive, it assume there is only 1 level of wrapping, e.g. CoilPairs.
     # Offers about a 15-20% speedup on YQOMagnets
-    unwrapped_magnets = []
+    unwrapped = []
     for magnet in magnets:
-        for s in magnet:
-            unwrapped_magnets.append(s)
+        if isinstance(magnet, sources.CoilPair):
+            unwrapped += magnet.magnets
+        else:
+            unwrapped.append(magnet)
+    
 
     a1p, a2p, a3p = evaluate_axis_projection(
         projection
@@ -317,7 +321,7 @@ def plot_vector_B_field(
             for (
                 m
             ) in (
-                unwrapped_magnets
+                unwrapped
             ):  # Each magnet is passed in separately, since if the worker has to iterate over the list, it runs into the GIL limitation
                 coord = np.zeros(3)
                 coord[a1p] = a1
@@ -393,3 +397,14 @@ def print_field_gradient(magnets, centre, label=""):
         "%s: y axis gradient: %.3g G/cm"
         % (label, ((B2abs - B0abs) * 1e4 / (delta / 1e-2)))
     )
+
+def get_axes_ndim(axes):
+    '''
+    Quick function to determine if an Axes object is 3D (can accept x, y, z data)
+    or 2d (can only accept x, y data)
+    '''
+    if hasattr(axes, "get_zlim"):
+        n = 3
+    else:
+        n = 2
+    return n
