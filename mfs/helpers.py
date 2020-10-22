@@ -290,9 +290,8 @@ def plot_vector_B_field(
         else:
             unwrapped.append(magnet)
 
-    a1p, a2p, a3p = evaluate_axis_projection(
-        projection
-    )  # This converts the projection into indicies. e.g. "zxy" will
+    a1p, a2p, a3p = evaluate_axis_projection(projection)
+    # This converts the projection into indicies. e.g. "zxy" will
     # put (rspace) z along the graph's x axis, (rspace) x along the
     # graph's y axis, and use a fixed (realspace) y value
     axOneLim = limit
@@ -322,12 +321,8 @@ def plot_vector_B_field(
                 coord[a1p] = a1
                 coord[a2p] = a2
                 coord[a3p] = centre[a3p]
-                argument = [
-                    m,
-                    coord,
-                    i,
-                    j,
-                ]  # i and j are passed to the function (and passed back) so that we do not rely on synchronous threading
+                argument = [m, coord, i, j] 
+                # i and j are passed to the function (and passed back) so that we do not rely on synchronous threading
                 positions.append(argument)
     if not threads or threads == 1:
         print("Single threaded")
@@ -340,9 +335,8 @@ def plot_vector_B_field(
         pool.close()
         pool.join()
     for element in out:
-        i = element[
-            1
-        ]  # recover the i and j indicies to locate this actual value in the grid
+        # recover the i and j indicies to locate this actual value in the grid
+        i = element[1]
         j = element[2]
         B_field = element[0]
         U[i, j] += B_field[a1p]
@@ -387,7 +381,8 @@ def print_field_gradient(magnets, centre, label=""):
     print(
         "%s: x axis gradient: %.3g G/cm"
         % (label, ((B1abs - B0abs) * 1e4 / (delta / 1e-2)))
-    )  # The factor multiplication converts from an absolute difference in Tesla to a gradient in G/cm
+    ) 
+    # The factor multiplication converts from an absolute difference in Tesla to a gradient in G/cm
     print(
         "%s: y axis gradient: %.3g G/cm"
         % (label, ((B2abs - B0abs) * 1e4 / (delta / 1e-2)))

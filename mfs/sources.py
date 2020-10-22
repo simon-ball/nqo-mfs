@@ -275,12 +275,10 @@ class CircularCoil(Magnet):
         # First in polar co-ordinates
         xDash = rDash[0] - self.rDash[0]
         yDash = rDash[1] - self.rDash[1]
-        zDash = (
-            rDash[2] - self.rDash[2]
-        )  # These subtractions allow us to calculate as if the coil has its origin at (0,0,0)
-        r = np.sqrt(
-            xDash ** 2 + zDash ** 2
-        )  # radial distance of rDash from coil centre
+        zDash = rDash[2] - self.rDash[2]  
+        # These subtractions allow us to calculate as if the coil has its origin at (0,0,0)
+        r = np.sqrt(xDash ** 2 + zDash ** 2)  
+        # radial distance of rDash from coil centre
         # !!NOTE!! within this function, r is treated as a **radius** and not as a vector position
 
         # Axial term, i.e. along yDash axis
@@ -595,11 +593,9 @@ class PermanentMagnet(Magnet):
                         )
                     )
                     ByDash += Q * np.arctan(
-                        xiDash
-                        * zkDash
+                        xiDash * zkDash
                         / (
-                            yjDash
-                            * np.sqrt(
+                            yjDash * np.sqrt(
                                 np.power(xiDash, 2)
                                 + np.power(yjDash, 2)
                                 + np.power(zkDash, 2)
@@ -673,12 +669,11 @@ class CoilPair(Magnet):
             "cylinder",
         ]:
             self.shape = CircularCoil
-            self.dimsDash[
-                "axDash"
-            ] = 0  # create these as dummy values to simplify later handling. They will never be used, they just allow the code to skip some conditionals
-            self.dimsDash[
-                "azDash"
-            ] = 0  # create these as dummy values to simplify later handling. They will never be used, they just allow the code to skip some conditionals
+            # create these as dummy values to simplify later handling. They will
+            # never be used, they just allow the code to skip some conditionals
+            self.dimsDash["axDash"] = 0 
+            
+            self.dimsDash["azDash"] = 0
         elif self.dimsDash["shape"].lower() in [
             "rect",
             "rectangular",
@@ -688,9 +683,7 @@ class CoilPair(Magnet):
             "cubic",
         ]:
             self.shape = RectangularCoil
-            self.dimsDash[
-                "radius"
-            ] = 0  # create these as dummy values to simplify later handling. They will never be used, they just allow the code to skip some conditionals
+            self.dimsDash["radius"] = 0
         else:
             raise ValueError(
                 'Error: shape not understood. Try either "circular" or "rectangular"'
@@ -713,9 +706,8 @@ class CoilPair(Magnet):
         pass
 
     def change_current(self, new_I):
-        if (
-            not self.spatial
-        ):  # using the approximation - have to allow for this when changing current
+        if not self.spatial:
+            # using the approximation - have to allow for this when changing current
             new_I *= self.dimsDash["axial layers"] * self.dimsDash["radial layers"]
         for mag in self.magnets:
             mag.I = new_I
