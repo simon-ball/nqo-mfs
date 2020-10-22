@@ -1,0 +1,21 @@
+---
+language: python
+python: 
+  - 3.6
+  - 3.7
+  - 3.8
+
+cache: pip
+
+dist: focal
+addons:
+  apt:
+    packages:
+      - python3-pip
+install:
+  - pip install -r requirements.txt
+  - pip install .
+script:
+  - python3 -m pytest ./mfs
+after_success: 
+  - bash <(curl -s https://codecov.io/bash)
