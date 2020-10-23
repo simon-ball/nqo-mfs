@@ -50,7 +50,11 @@ def rotate_around_x(phi):
         vector around the X-axis by theta
     """
     return np.array(
-        [[1, 0, 0], [0, np.cos(phi), -np.sin(phi)], [0, np.sin(phi), np.cos(phi)]]
+        [
+            [1, 0, 0],
+            [0, np.cos(phi), -np.sin(phi)],
+            [0, np.sin(phi), np.cos(phi)]
+        ]
     )
 
 
@@ -299,9 +303,8 @@ def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, thr
         
     
     """
-    if not isinstance(
-        magnets, (list, tuple, np.ndarray)
-    ):  # if a single magnet is passed to this program, then turn it into a list of magnets for simplicity.
+    if not isinstance(magnets, (list, tuple, np.ndarray)): 
+        # if a single magnet is passed to this program, then turn it into a list of magnets for simplicity.
         magnets = (magnets,)
     # The risk with multiprocessing is that completion is contingent on the slowest process
     # Typically this will be CoilPairs which act like a single magnet, but may contain 10s-100s
@@ -330,18 +333,13 @@ def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, thr
     U = np.zeros(X.shape)  # Vector length along (Graph) x-axis
     V = np.zeros(X.shape)  # and along graph (y-axis)
     C = np.zeros(X.shape)  # Vector colour
-    positions = (
-        []
-    )  # This list and the following while loop builds the list at which the B field will be evaluated.
-    for i, a1 in enumerate(
-        axOne
-    ):  # i and j are indicies for the location of the rspace co-ordinate within the grids X and Y
+    positions = []
+    # This list and the following while loop builds the list at which the B field will be evaluated.
+    for i, a1 in enumerate(axOne):
         for j, a2 in enumerate(axTwo):
-            for (
-                m
-            ) in (
-                unwrapped
-            ):  # Each magnet is passed in separately, since if the worker has to iterate over the list, it runs into the GIL limitation
+            # i and j are indicies for the location of the rspace co-ordinate within the grids X and Y
+            for m in unwrapped:  
+                # Each magnet is passed in separately, since if the worker has to iterate over the list, it runs into the GIL limitation
                 coord = np.zeros(3)
                 coord[a1p] = a1
                 coord[a2p] = a2
@@ -354,6 +352,8 @@ def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, thr
         out = [_plot_vector_B_field_worker(argument) for argument in positions]
     else:
         # no point in using more processes than jobs:
+        if threads > len(positions):
+            threads = len(positions)
         print("Multiprocessing with {} processes".format(threads))
         pool = multiprocessing.Pool(threads)
         out = pool.map(_plot_vector_B_field_worker, positions)
