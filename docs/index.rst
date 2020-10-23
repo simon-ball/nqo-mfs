@@ -10,6 +10,7 @@ Contents
    :maxdepth: 2
    
    docs/installation
+   docs/conventions
    docs/detailed_doc
 
 
