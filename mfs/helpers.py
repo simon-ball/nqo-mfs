@@ -263,10 +263,18 @@ def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
 
 
 def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, threads=_ncpu):
-    """Produce a 50x50 grid of vector arrows for the magnetic field arising from [magnets]
-    It produces a projection of the field based on the 'projection' parameter around the point (centre)
-    This function divides the positions and magnets up among multiple threads. It's a dramatic slow down for single magnet (roughly /12 slower) due to 
-    the overhead, but a fairly substantial speedup (x3) for a large number.
+    """Produce a 2D quiver plot of the vector B-field arising from a set of magnets
+    
+    Plot a grid of arrows indicating the direction and magnitude of the vector
+    B-field. The values are calculated in a flat plane in the global frame,
+    determined by ``centre``, ``projection``, and ``limit``. 
+    
+    The grid is ``points * points`` in size, covering the area ``centre-limit``
+    to ``centre+limit``
+    
+    For large numbers of magnets, multiprocessing is recommended to speed up the
+    calculations. Additional processes can be spawned with the ``threads`` argument.
+    Particularly recommended with spatially distributed CoilPairs. 
     
     Parameters
     ----------
