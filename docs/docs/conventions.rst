@@ -1,5 +1,5 @@
-mfs: conventions
-================
+Conventions and Notation
+========================
 
 To maintain consistency, the following conventions are used throughout the library
 

@@ -23,7 +23,7 @@ os.environ['MPLBACKEND'] = 'Agg'  # avoid tkinter import errors on rtfd.io
 # -- Project information -----------------------------------------------------
 
 project = u'mfs'
-copyright = '2019, Simon Ball'
+copyright = '2018, Simon Ball'
 author = 'Simon Ball'
 
 # The short X.Y version
