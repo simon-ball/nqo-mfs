@@ -30,6 +30,6 @@ Credits
     Simon Ball
     
 
-:Licence: GPLv3
+:Licence: MIT
 
 :Version: 1.1.0
