@@ -6,7 +6,7 @@ wires and circular or rectangular coils (in either Helmholtz or Anti-helmholtz
 configuration).
 
 
-Each magnet is created in its own co-ordinate system, r'=(x', y', z'), which is
+Each magnet is created in its own co-ordinate frame, r'=(x', y', z'), which is
 rotated from the laboratory frame by two angles, theta (rotation around Z) and
 phi (rotation around X).
 
@@ -28,45 +28,44 @@ mu0 = 4 * pi * 1e-7
 
 class Magnet(object):
     """A representation of a generic magnetic field source (e.g. permanent magnet,
-    solenoid etc). The magnet is defined in its own co-ordinate axis r'=(x',y',z'),
+    solenoid etc). The magnet is defined in its own co-ordinate axis ``r'=(x',y',z')``,
     rotated with respect to the lab frame by theta and phi. 
     
-    The angular convention used here is as follows:
-        * Theta is the azimuthal angle
-        * Phi is the polar angle
+    The angular convention used here is as follows
+    
+    * Theta is the azimuthal angle
+    * Phi is the polar angle
         
-        This means that:
-            If Phi=0°, values of Theta correspond to a rotation of the XY plane
-            around the Z axis. 
-            At Theta=90°, Phi=0°, the positive xDash axis is aligned along the
-            positive Y axis
-            
-            If Theta=0°, values of Phi correspond to a rotation of the YZ plane
-            around the X axis
-            At Theta=0°, Phi=90°, the positive zDash axis is aligned along the
-            positive Y axis
+    This means that
+    
+    * If Phi=0°, values of Theta correspond to a rotation of the XY plane
+      around the Z axis. 
+    * At Theta=90°, Phi=0°, the positive xDash axis is aligned along the
+      positive Y axis
+    * If Theta=0°, values of Phi correspond to a rotation of the YZ plane
+      around the X axis
+    * At Theta=0°, Phi=90°, the positive zDash axis is aligned along the
+      positive Y axis
     
     Specific kinds of magnets extend this class to calculate the exact form of
     the magnetic field arising. """
 
-    def __init__(self, rDash, dimsDash, theta, phi=0):
+    def __init__(self, rDash, dimsDash, theta=0, phi=0):
         """Initialise the generic magnet.
         
         Parameters
         ----------
-        rDash : list
-            The origin of the magnet in the Dashed co-ordinate system
-        dimsDash : dict
+        rDash: list
+            The origin of the magnet in the Dashed co-ordinate frame
+        dimsDash: dict
             Dictionary of parameters. The exact parameters accepted are wide 
             anging, and are listed under the major, user-facing classes
-        theta : float
-            Rotation of the xDash-yDash axis around the Z axis in degrees
-        phi : float
-            Rotation of the yDash-zDash axis around the X axis in degrees
-        
-        Returns
-        -------
-        null
+        theta: float, optional
+            Rotation of the xDash-yDash axis around the Z axis in degrees.
+            Defaults to 0 
+        phi: float, optional
+            Rotation of the yDash-zDash axis around the X axis in degrees.
+            Defaults to 0
         """
         self.idx = 0
         self._theta = theta
@@ -122,48 +121,48 @@ class Magnet(object):
         self._phi = _phi
 
     def rotate_to_dashed_frame(self, r):
-        """Angular rotation from the lab frame to the Dashed co-ordinate system
+        """Angular rotation from the lab frame to the Dashed co-ordinate frame
 
         Parameters
         ----------
-        r : np.ndarray
-            A vector in the lab frame : r = (x, y, z)
+        r: np.ndarray
+            A vector in the lab frame: ``r = (x, y, z)``
         
         Returns
         -------
         np.ndarray
-            The vector in the Dashed co-ordinate system : rDash = (xDash, yDash, zDash)
+            The vector in the Dashed co-ordinate frame: ``rDash = (xDash, yDash, zDash)``
         """
         return helpers.rotate_to_dashed_frame(r, self.theta, self.phi)
 
     def rotate_to_normal_frame(self, rDash):
-        """Angular rotation from the  Dashed co-ordinate system to the lab frame
+        """Angular rotation from the Dashed co-ordinate frame to the lab frame
 
         Parameters
         ----------
-        r : np.ndarray
-            A vector in the Dashed co-ordinate system : rDash = (xDash, yDash, zDash)
+        r: np.ndarray
+            A vector in the Dashed co-ordinate frame: ``rDash = (xDash, yDash, zDash)``
         
         Returns
         -------
         np.ndarray
-            The vector in the lab frame : r = (x, y, z)
+            The vector in the lab frame: ``r = (x, y, z)``
         """
         return helpers.rotate_to_normal_frame(rDash, self.theta, self.phi)
 
     def get_B_field(self, r):
         """Calculate the vector B field at a given position r in the lab frame
-        B(r) = B(x, y, z)
+        ``B(r) = B(x, y, z)``
 
         Parameters
         ----------
-        r : np.ndarray
-            A vector in the lab frame : r = (x, y, z)
+        r: np.ndarray
+            A vector in the lab frame: ``r = (x, y, z)``
         
         Returns
         -------
         np.ndarray
-            The vector B field at position r in the laboratory frame
+            The vector B field at position ``r`` in the laboratory frame
         """
         rDash = self.rotate_to_dashed_frame(r)
         BDash = self.get_BDash_field(rDash)
@@ -172,19 +171,17 @@ class Magnet(object):
 
     def get_BDash_field(self, rDash):
         """Calculate the vector B field at a given position rDash in the Dashed
-        co-ordinate system B(rDash) = B(xDash, yDash, zDash)
-        
-        This function is geometry specific and must be implemented in the subclass
+        frame ``B(rDash) = B(xDash, yDash, zDash)``
 
         Parameters
         ----------
-        rDash : np.ndarray
-            A vector in the Dashed co-ordinate system : rDash = (xDash, yDash, zDash)
+        rDash: np.ndarray
+            A vector in the Dashed co-ordinate frame: ``rDash = (xDash, yDash, zDash)``
         
         Returns
         -------
         np.ndarray
-            The vector B field at position rDash in the Dashed co-ordinate system
+            The vector B field at position ``rDash`` in the Dashed co-ordinate frame
         """
         raise NotImplementedError("Must be implemented in geometry-specific class")
 
@@ -199,20 +196,24 @@ class Magnet(object):
         
         Parameters
         ----------
-        axes : matplotlib.axes._subplots.AxesSubplot
+        axes: matplotlib.axes._subplots.AxesSubplot
             The pyplot axis on which the outline will be drawn. Can be produced by, e.g.
                 fig, axes = plt.subplots()
-        projection : str
-            The plane into which the outline is being projected
-            Accepted values are 2 letters out of 'xyz', with the first letter
-            giving the real space axis of the graph's x-axis
-
+        projection: str
+            The projection of the global frame onto the axes, in the form of a
+            string such as ``xyz``. Maps the global frame dimension at position
+            ``i`` in the string onto the axis dimension ``i``.
+            For example, ``projection="zxy"`` will project
+            
+            * global dimension z onto axes dimension x
+            * global dimension x onto axes dimension y
+            * global dimension y onto axes projection z
         """
         # self.coordinates must be provided by the geometry-specific class
         a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
-        if helpers.get_axes_ndim(axes) == 2:
+        if helpers._get_axes_ndim(axes) == 2:
             axes.plot(self.coordinates[a1p], self.coordinates[a2p], self.fmat)
-        elif helpers.get_axes_ndim(axes) == 3:
+        elif helpers._get_axes_ndim(axes) == 3:
             axes.plot(
                 self.coordinates[a1p],
                 self.coordinates[a2p],
@@ -237,26 +238,30 @@ class CircularCoil(Magnet):
     Reference
     ---------
     https://doi.org/10.1103/PhysRevA.35.1535
-    Bergeman, Magnetostatic trapping fields for neutral atoms, 1987, PRA 35 1535
+    
+    Magnetostatic trapping fields for neutral atoms (Bergman)
+    
+    1987, PRA 35 1535
     
     Parameters
     ----------
-    I : float
+    I: float
         Current flowing through coil
-    rDash : 3 element list or array
+    rDash: 3 element list or array
             Position of origin of coil
     dimsDash: dict
-        radius : float
-            Radius of the coil, to the centre of the conductor
+        Dictionary of parameters. Required parameters for a circular coil are
+        
+        * ``radius``: float
     """
 
     def __init__(self, strength, rDash, dimsDash, theta, phi=0):
         super(CircularCoil, self).__init__(rDash, dimsDash, theta, phi)
         self.I = strength
-        self.write_magnet_limits()
-        pass
+        self._write_magnet_limits()
+        return
 
-    def write_magnet_limits(self):
+    def _write_magnet_limits(self):
         """Generate co-ordinates for the `plot_magnet_position`"""
         self.radius = self.dimsDash["radius"]
         n = 36  # Convert the circle into a polygon with this number of points
@@ -266,12 +271,9 @@ class CircularCoil(Magnet):
         yDash = self.rDash[1]
         coordinatesDash = np.array([xDash, yDash, zDash])
         self.coordinates = self.rotate_to_normal_frame(coordinatesDash)
-        pass
+        return
 
     def get_BDash_field(self, rDash):
-        """Get the (x', y', z') components of the B field at position 
-        `rDash=(x',y',z')` for a single round loop
-        """
         # First in polar co-ordinates
         xDash = rDash[0] - self.rDash[0]
         yDash = rDash[1] - self.rDash[1]
@@ -329,32 +331,41 @@ class RectangularCoil(Magnet):
     References
     ----------
     https://dx.doi.org/10.6028%2Fjres.105.045
-    Misiaken, Equations for the Magnetic Field produced by One or More Rectangualr Loops of Wire in the Same Plane
+    
+    Equations for the Magnetic Field produced by One or More Rectangular
+    Loops of Wire in the Same Plane (Misiakin)
+    
     J Res Natl Inst Stand Technol. 2000 Jul-Aug; 105(4): 557–564
     
-    Two slight changes from the paper:
-        * consistent with the other sources in this file, to choose yDash as
-          the principle axis, and not Z
-        * Due to Python zero-indexing arrays, the use of (-1)**alpha changes
-          slightly
+    Two slight changes from the paper
+    
+    * consistent with the other sources in this file, to choose ``yDash`` as
+      the principle axis, and not ``Z``
+    * Due to Python zero-indexing arrays, the use of ``(-1)**alpha`` changes
+      slightly
     
     Parameters
     ----------
-    strength : float
+    strength: float
         Current flowing through coil
-    rDash : 3 element list or array
-            Position of origin of coil
+    rDash: 3 element list or array
+        Position of origin of coil in the coil frame
     dimsDash: dict
-        'axDash' : FULL length of coil along the xDash axis
-        'azDash' : FULL length of coil along the zDash axis
+        Dictionary of parameters. Required parameters for a rectangular coil are
+        
+        * ``axDash``: float
+          Full length of coil along ``xDash`` axis
+        * ``azDash``: float
+          Full length of coil along ``zDash`` axis
     """
 
     def __init__(self, strength, rDash, dimsDash, theta, phi):
         super(RectangularCoil, self).__init__(rDash, dimsDash, theta, phi)
         self.I = strength
-        self.write_magnet_limits()
+        self._write_magnet_limits()
+        return
 
-    def write_magnet_limits(self):
+    def _write_magnet_limits(self):
         self.axD = self.dimsDash["axDash"] / 2
         self.azD = self.dimsDash["azDash"] / 2
         self.coordinates = np.zeros((3, 5))
@@ -367,11 +378,9 @@ class RectangularCoil(Magnet):
                 self.rDash[2] - (b[i] * self.azD),
             ]
             self.coordinates[:, i] = self.rotate_to_normal_frame(np.array(c))
+        return
 
     def get_BDash_field(self, rDash):
-        """Get the (x', y', z') components of the B field at position 
-        `rDash=(x',y',z')` for a single rectangular loop
-        """
         prefactor = mu0 * self.I / (4 * pi)
         xD = rDash[0] - self.rDash[0]
         yD = rDash[1] - self.rDash[1]
@@ -415,7 +424,7 @@ class RectangularCoil(Magnet):
 
 class PermanentMagnet(Magnet):
     """A representation of a rectangular permanent magnet. The magnet is defined
-    in its own co-ordinate system, (x', y', z'), with the centre of the magnet
+    in its own co-ordinate system, ``(x', y', z')``, with the centre of the magnet
     at rDash and magnetisation M aligned parallel to the y' axis. 
     
     dimsDash is a dictionary containing the keys axDash, ayDash, azDash. These
@@ -424,36 +433,38 @@ class PermanentMagnet(Magnet):
     References
     ----------
     https://link.springer.com/content/pdf/10.1007%2FBF01573988.pdf
-    This function implements the approach taken by Metzger in Archiv fur Elektrotechnik 59 (1977) 229-242.
-    Dreidemensionale_Feldberechnung_starr_magnetierter_permanentmagnete_mit_einer_anwendung_in_eisenlosen_elektrischen_maschinen.pdf
-    (accessible on the wiki), choosing magnetisation to be along the y' axis
+    
+    This function implements the approach taken by Metzger in Archiv fur
+    Elektrotechnik 59 (1977) 229-242, with one change - selecting ``yDash`` as
+    the axis of magnetisation
     
     Parameters
     ----------
-        strength : float
+        strength: float
             The magnetisation of the magnet, in Tesla per metre
-        rDash : list
-            The origin of the magnet in the Dashed co-ordinate system
-        dimsDash : dict
-            Dictionary of parameters. The required parameters for a permanent magnet are:
-                axDash
-                ayDash
-                azDash
+        rDash: list
+            The origin of the magnet in the Dashed co-ordinate frame
+        dimsDash: dict
+            Dictionary of parameters. The required parameters for a permanent magnet are
+            
+            * ``axDash``
+            * ``ayDash``
+            * ``azDash``
             All three parameters are the FULL lengths of the magnet, in the x', y', z' frame, in metres
-        theta : float
-            Rotation of the xDash-yDash axis around the Z axis in degrees
-        phi : float
-            Rotation of the yDash-zDash axis around the X axis in degrees
+        theta: float
+            Rotation of the ``xDash-yDash`` axis around the Z axis in degrees
+        phi: float
+            Rotation of the ``yDash-zDash`` axis around the X axis in degrees
     """
 
     def __init__(self, strength, rDash, dimsDash, theta, phi=0):
         super(PermanentMagnet, self).__init__(rDash, dimsDash, theta, phi)
         self.M = strength
-        self.write_magnet_limits()
+        self._write_magnet_limits()
         pass
 
-    def write_magnet_limits(self):
-        """Calculate the position of the magnet verticies in the dash coordinate system.
+    def _write_magnet_limits(self):
+        """Calculate the position of the magnet verticies in the dash coordinate frame.
         
         This function is a bit of a hodge-podge, because one format of verticies 
         is easier for B-field calculation, and an entirely different format is 
@@ -538,11 +549,8 @@ class PermanentMagnet(Magnet):
         pass
 
     def plot_magnet_position(self, axes, projection):
-        """The parent class approach can be shared by the coils, but the
-        permanent magnet needs a different approach to generate the full 3D 
-        model"""
         a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
-        ndim = helpers.get_axes_ndim(axes)
+        ndim = helpers._get_axes_ndim(axes)
         if ndim == 2:
             for face in self.faces:
                 axes.plot(face[a1p], face[a2p], self.fmat)
@@ -559,20 +567,6 @@ class PermanentMagnet(Magnet):
         return
 
     def get_BDash_field(self, rDash):
-        """Calculate the vector B field resulting from a single permanent magnet 
-        at a given position rDash in the Dashed co-ordinate system
-        B(rDash) = B(xDash, yDash, zDash)
-
-        Parameters
-        ----------
-        rDash : np.ndarray
-            A vector in the Dashed co-ordinate system : rDash = (xDash, yDash, zDash)
-        
-        Returns
-        -------
-        np.ndarray
-            The vector B field at position rDash in the Dashed co-ordinate system
-        """
         BxDash = 0
         ByDash = 0
         BzDash = 0
@@ -607,44 +601,47 @@ class PermanentMagnet(Magnet):
 
 
 class CoilPair(Magnet):
-    """A generic pair of coils. They can both be circular or rectangular, and either Helmholtz or Anti-Helmholtz.
+    """A generic pair of coils. They can both be circular or rectangular, and
+    either Helmholtz or Anti-Helmholtz.
     
     Parameters
     ----------
-    I : float
+    I: float
         Current flowing through coils
-    rDash : 3 entry list or array
-        Origin of coils in Dash co-ordinate system
-    dimsDash : dict
-        full spacing : float
-            full spacing between closest coils along yDash axis
-        spatially distributed' : bool
-            Should the programme calculate for each loop independently, or approximate by placing all coils in the same place?
-        axial layers : int
-            number of new layers further out along the yDash axis
-        axial spacing : float
-            distance between centres of layers in the axial direction
-        radial layers : int
-            number of new layers further out away from yDash axis
-        radial spacing : float
-            distance between centres of layers in the radial direction
-        configuration : str
-            Valid entries are 'ahh', 'hh' and some variations
-        shape : str
-            Valid entries are variations on 'circ', 'circular', 'rectangular', 'r', etc
-        Plus whatever arguments are necessary for Rectangular or Circular coils (see help for those classes)
-    theta
-        float. Rotation of Dash system around Z axis
-    phi
-        float. Rotation of Dash system around X axis
+    rDash: 3 entry list or array
+        Origin of coils in Dash co-ordinate frame
+    dimsDash: dict
+        Dictionary of coil pair parameters.
         
+        * ``full spacing``: float
+            full spacing between closest coils along yDash axis
+        * ``spatially distributed``: bool
+            Should the programme calculate for each loop independently, or approximate by placing all coils in the same place?
+        * ``axial layers``: int
+            number of new layers further out along the yDash axis
+        * ``axial spacing``: float
+            distance between centres of layers in the axial direction
+        * ``radial layers``: int
+            number of new layers further out away from yDash axis
+        * ``radial spacing``: float
+            distance between centres of layers in the radial direction
+        * ``configuration``: str
+            Valid entries are ``ahh``, ``hh`` and some variations
+        * ``shape``: str
+            Valid entries are variations on ``circ``, ``circular``, ``rectangular``, ``r``, etc
+        * Required parameters for either ``RectangularCoil`` or ``CircularCoil``
+          (see the documentaiton for those classes)
+    theta: float
+        Rotation of Dash frame around Z axis
+    phi: float
+        Rotation of Dash frame around X axis
         """
 
     def __init__(self, I, rDash, dimsDash, theta, phi):
         super(CoilPair, self).__init__(rDash, dimsDash, theta, phi)
         self.I = I
-        self.handle_text_arguments()
-        self.create_magnets()
+        self._handle_text_arguments()
+        self._create_magnets()
 
     @property
     def __next__(self):
@@ -658,7 +655,15 @@ class CoilPair(Magnet):
     def __len__(self):
         return len(self.magnets)
 
-    def handle_text_arguments(self):
+    def _handle_text_arguments(self):
+        """
+        Process the arguments given in ``dimsDash``.
+        
+        Populate the key:value pairs for the non-used magnet type. These are dummies
+        that will never be used, but by inserting them, it simplifies later code
+        (i.e. it can skip some conditionals by assuming the keys are present)
+        """
+        
         if self.dimsDash["shape"].lower() in [
             "circ",
             "circular",
@@ -669,10 +674,7 @@ class CoilPair(Magnet):
             "cylinder",
         ]:
             self.shape = CircularCoil
-            # create these as dummy values to simplify later handling. They will
-            # never be used, they just allow the code to skip some conditionals
             self.dimsDash["axDash"] = 0 
-            
             self.dimsDash["azDash"] = 0
         elif self.dimsDash["shape"].lower() in [
             "rect",
@@ -705,7 +707,10 @@ class CoilPair(Magnet):
             )
         pass
 
-    def change_current(self, new_I):
+    def _change_current(self, new_I):
+        """Convert current to account for spatial distirbution. If the coils are
+        not spatially distributed, multiple the base current of a single coil by
+        the number of coils that should be present."""
         if not self.spatial:
             # using the approximation - have to allow for this when changing current
             new_I *= self.dimsDash["axial layers"] * self.dimsDash["radial layers"]
@@ -713,7 +718,7 @@ class CoilPair(Magnet):
             mag.I = new_I
         pass
 
-    def create_magnets(self):
+    def _create_magnets(self):
         self.half_spacing = self.dimsDash["full spacing"] / 2
         self.spatial = self.dimsDash["spatially distributed"]
         self.magnets = []
@@ -792,22 +797,6 @@ class CoilPair(Magnet):
         return BDash
 
     def plot_magnet_position(self, axes, projection):
-        """Plot the outline of all magnets in this group on the provided axes with the provided projection
-        
-        This only plots the 2D outline - e.g. an arbitrarily rotated cuboid will appear to be hexagonal
-        This function is geometry specific and must be implemented in the subclass
-        
-        Parameters
-        ----------
-        axes : matplotlib.axes._subplots.AxesSubplot
-            The pyplot axis on which the outline will be drawn. Can be produced by, e.g.
-                fig, axes = plt.subplots()
-        projection : str
-            The plane into which the outline is being projected
-            Accepted values are 2 or 3 letters out of 'xyz', with the first letter
-            giving the real space axis of the graph's x-axis, the second letter giving
-            the real space axis of the graph's y-axis, and the third letter ignored. 
-        """
         for m in self.magnets:
             m.plot_magnet_position(axes, projection)
         pass

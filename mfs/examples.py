@@ -3,11 +3,17 @@ import matplotlib.pyplot as plt
 from . import sources
 from . import helpers
 
+DEBUG = False
+# Slight hack to allow the testing infrastructure to execute
+# this code without getting caught by the blocking UI calls
+# Users studying this code may assume that DEBUG is ALWAYS False
 
 def permanent_magnets():
     """Create a pair of permanent magnets, some distance away from the origin
     
-    The magnets are some distance apart in xDash, with magnetisation along (but pointing in opposite directions) yDash"""
+    The magnets are some distance apart in xDash, with magnetisation along
+    but pointing in opposite directions) yDash
+    """
 
     rDash0 = [0.1, 0, 0]
     rDash1 = [-0.1, 0, 0]
@@ -41,7 +47,7 @@ def permanent_magnets():
         points=20,
         limit=0.05,
         projection="xy",
-        threads=helpers.ncpu,
+        threads=helpers._ncpu,
     )
     helpers.plot_vector_B_field(
         magnets,
@@ -50,7 +56,7 @@ def permanent_magnets():
         points=20,
         limit=0.1,
         projection="zy",
-        threads=helpers.ncpu,
+        threads=helpers._ncpu,
     )
     helpers.plot_vector_B_field(
         magnets,
@@ -59,9 +65,11 @@ def permanent_magnets():
         points=20,
         limit=0.1,
         projection="xz",
-        threads=helpers.ncpu,
+        threads=helpers._ncpu,
     )
-    plt.show()
+    if not DEBUG:
+        plt.show()
+    return
 
 
 def rectangular_coil_pair():
@@ -103,7 +111,7 @@ def rectangular_coil_pair():
         points=20,
         limit=0.05,
         projection="xy",
-        threads=helpers.ncpu,
+        threads=helpers._ncpu,
     )
     helpers.plot_vector_B_field(
         mag,
@@ -112,9 +120,11 @@ def rectangular_coil_pair():
         points=20,
         limit=0.1,
         projection="zy",
-        threads=helpers.ncpu,
+        threads=helpers._ncpu,
     )
-    plt.show()
+    if not DEBUG:
+        plt.show()
+    return
 
 
 def circular_coil_pair():
@@ -157,7 +167,7 @@ def circular_coil_pair():
         points=10,
         limit=0.1,
         projection="xy",
-        threads=helpers.ncpu,
+        threads=helpers._ncpu,
     )
     helpers.plot_vector_B_field(
         mag,
@@ -166,7 +176,7 @@ def circular_coil_pair():
         points=10,
         limit=0.1,
         projection="zy",
-        threads=helpers.ncpu,
+        threads=helpers._ncpu,
     )
     helpers.plot_vector_B_field(
         mag,
@@ -175,6 +185,8 @@ def circular_coil_pair():
         points=10,
         limit=0.1,
         projection="xz",
-        threads=helpers.ncpu,
+        threads=helpers._ncpu,
     )
-    plt.show()
+    if not DEBUG:
+        plt.show()
+    return

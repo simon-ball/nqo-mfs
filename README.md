@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.com/simon-ball/nqo-mfs.svg?branch=master&status=passed)](https://travis-ci.com/simon-ball/nqo-mfs)
 [![codecov](https://codecov.io/gh/simon-ball/nqo-mfs/branch/master/graph/badge.svg)](https://codecov.io/gh/simon-ball/nqo-mfs)
+[![Documentation Status](https://readthedocs.org/projects/nqo-mfs/badge/?version=latest)](https://nqo-mfs.readthedocs.io/en/latest/?badge=latest)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 
