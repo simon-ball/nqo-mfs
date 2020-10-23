@@ -1,5 +1,4 @@
 import numpy as np
-from multiprocessing import Pool as ThreadPool
 import multiprocessing
 
 from . import sources
