@@ -211,9 +211,9 @@ class Magnet(object):
         """
         # self.coordinates must be provided by the geometry-specific class
         a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
-        if helpers.get_axes_ndim(axes) == 2:
+        if helpers._get_axes_ndim(axes) == 2:
             axes.plot(self.coordinates[a1p], self.coordinates[a2p], self.fmat)
-        elif helpers.get_axes_ndim(axes) == 3:
+        elif helpers._get_axes_ndim(axes) == 3:
             axes.plot(
                 self.coordinates[a1p],
                 self.coordinates[a2p],
@@ -550,7 +550,7 @@ class PermanentMagnet(Magnet):
 
     def plot_magnet_position(self, axes, projection):
         a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
-        ndim = helpers.get_axes_ndim(axes)
+        ndim = helpers._get_axes_ndim(axes)
         if ndim == 2:
             for face in self.faces:
                 axes.plot(face[a1p], face[a2p], self.fmat)
