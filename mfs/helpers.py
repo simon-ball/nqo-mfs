@@ -239,15 +239,37 @@ def evaluate_axis_projection(projection):
 
 def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
     """
-    Plot the magnitude of the B field along an axis defined by `projection` and `limit`
+    Plot the magnitude of the B-field along a 1D axis
+    
+    Axis must be parallel to one of the global cardinal dimensions.
+    
+    Parameters
+    ----------
+    magnets: magnet or list of magnets
+        Group of magnets over which to calculate
+    axes: matplotlib.Axes
+        axes on which to display the plot. Produced by, e.g., fig, axes = plt.subplots()
+    centre: 3-element array
+        (x, y, z) in global frame
+    limit: float
+        +- limit of the axis along which to calculate field. 
+        The axis goes from (centre-lim) to (centre+lim)
+    projection: str
+        Which cardinal axis is your axis parallel to
+    points: Number of points at which to calculate B-field. 
+    
+    Returns
+    -------
+    np.ndarray
+        Axis of locations along projection at which values were calculated
+    np.ndarray
+        Values of magnitude of B-field along axis
     """
     if not isinstance(centre, np.ndarray):
         centre = np.array(centre)
     if not isinstance(magnets, (list, tuple, np.ndarray)):
         magnets = (magnets,)
-    a1p, a2p, a3p = evaluate_axis_projection(
-        projection
-    )  # This converts the projection into indicies. Here, we only care about the first index, the 2nd and 3rd are just dummies
+    a1p, a2p, a3p = evaluate_axis_projection(projection) 
     axOneLimLow = centre[a1p] - limit
     axOneLimHigh = centre[a1p] + limit
     axis = np.linspace(axOneLimLow, axOneLimHigh, points)
@@ -299,8 +321,15 @@ def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, thr
         Operates on a single process if given either 0 or 1
         For a small number of magnets, single-threading is dramatically faster due to the 
         overhead of spawning new processes. 
-        
     
+    Returns
+    -------
+    np.ndarray
+        ``points x points`` array storing the ``i'th`` component of the B field
+        at those locations. ``i`` determed as the first element of ``projection``
+    np.ndarray
+        ``points x points`` array storing the ``j'th`` component of the B field
+        at those locations. ``j`` determed as the second element of ``projection``
     """
     if not isinstance(magnets, (list, tuple, np.ndarray)): 
         # if a single magnet is passed to this program, then turn it into a list of magnets for simplicity.
