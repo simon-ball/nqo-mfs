@@ -20,6 +20,7 @@ Overview
 .. rubric:: Display magnetic field
 
 .. autosummary:: 
+    mfs.helpers.plot_magnet_positions
     mfs.helpers.plot_scalar_B_field
     mfs.helpers.plot_vector_B_field
     mfs.helpers.print_field_gradient

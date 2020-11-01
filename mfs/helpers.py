@@ -3,12 +3,15 @@ import multiprocessing
 
 from . import sources
 
+
+"""misc"""
+_array_like = (list, tuple, np.ndarray, np.ma.MaskedArray)
 _ncpu = multiprocessing.cpu_count()
 
 
+
+
 """Rotation functions"""
-
-
 def rotate_around_z(theta):
     """Calculcate the rotation matrix to rotate around the Z-axis by angle theta
     (radians)
@@ -128,7 +131,8 @@ def rotate_to_dashed_frame(r, theta, phi):
     np.ndarray
         Rotated array
     """
-    return np.dot(np.dot(rotate_around_z(theta), rotate_around_x(phi)), r)
+    forward_rotation = np.dot(rotate_around_z(theta), rotate_around_x(phi))
+    return np.dot(forward_rotation, r)
 
 
 def rotate_to_normal_frame(rDash, theta, phi):
@@ -171,12 +175,11 @@ def rotate_to_normal_frame(rDash, theta, phi):
         angle (in radians) that defines the dashed frame rotation around the X axis
     
     """
-    return np.dot(np.dot(rotate_around_x(-phi), rotate_around_z(-theta)), rDash)
+    reverse_direction = np.dot(rotate_around_x(-phi), rotate_around_z(-theta))
+    return np.dot(reverse_direction, rDash)
 
 
 """Projection functions"""
-
-
 def evaluate_axis_projection(projection):
     """Interpret a 2D projection request
     
@@ -236,6 +239,37 @@ def evaluate_axis_projection(projection):
         axThreePos = 3 - (axOnePos + axTwoPos)
     return axOnePos, axTwoPos, axThreePos
 
+def plot_magnet_positions(magnets, axes, projection):
+    """
+    Plot the outline of all magnets on the provided axes
+    
+    Mass plotting wrapper for multiple magnets, rather than requiring the user
+    to plot each magnet individually.
+    
+    Parameters
+    ----------
+    magnets : Magnet or list of Magnets
+        The set of all magnets to plot
+    axes : matplotlib.axes._subplots.AxesSubplot
+            The pyplot axis on which the outline will be drawn. Can be produced by, e.g.
+                fig, axes = plt.subplots()
+        projection: str
+            The projection of the global frame onto the axes, in the form of a
+            string such as ``xyz``. Maps the global frame dimension at position
+            ``i`` in the string onto the axis dimension ``i``.
+            For example, ``projection="zxy"`` will project
+            
+            * global dimension z onto axes dimension x
+            * global dimension x onto axes dimension y
+            * global dimension y onto axes projection z
+    """ 
+    if not isinstance(magnets, _array_like):
+        magnets = (magnets, )
+    for magnet in magnets:
+        magnet.plot_magnet_position(axes, projection)
+    return
+
+
 
 def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
     """
@@ -267,7 +301,7 @@ def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
     """
     if not isinstance(centre, np.ndarray):
         centre = np.array(centre)
-    if not isinstance(magnets, (list, tuple, np.ndarray)):
+    if not isinstance(magnets, _array_like):
         magnets = (magnets,)
     a1p, a2p, a3p = evaluate_axis_projection(projection) 
     axOneLimLow = centre[a1p] - limit
@@ -331,7 +365,7 @@ def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, thr
         ``points x points`` array storing the ``j'th`` component of the B field
         at those locations. ``j`` determed as the second element of ``projection``
     """
-    if not isinstance(magnets, (list, tuple, np.ndarray)): 
+    if not isinstance(magnets, _array_like): 
         # if a single magnet is passed to this program, then turn it into a list of magnets for simplicity.
         magnets = (magnets,)
     # The risk with multiprocessing is that completion is contingent on the slowest process
