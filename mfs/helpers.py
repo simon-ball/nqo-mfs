@@ -1,3 +1,6 @@
+import json
+import yaml
+import pathlib
 import numpy as np
 import multiprocessing
 
@@ -7,6 +10,9 @@ from . import sources
 """misc"""
 _array_like = (list, tuple, np.ndarray, np.ma.MaskedArray)
 _ncpu = multiprocessing.cpu_count()
+
+_FORMAT_YAML = (".yaml", ".yml")
+_FORMAT_JSON = (".json")
 
 
 
@@ -486,3 +492,74 @@ def _get_axes_ndim(axes):
     else:
         n = 2
     return n
+
+
+
+def to_file(magnets, filepath):
+    """Write the magnet state to a yaml or json configuration file
+    
+    The configuration file may be easier to keep track of and edit than storing
+    the configuration directly inside a Python script
+    
+    Parameters
+    ----------
+    magnets: Magnet or list of Magnets
+        The set of magnets to write to file
+    filepath: str or pathlib object
+        The location to store the configuration.
+        The file should end in either `.yml`, `.yaml` or `.json`.
+    """
+    if not isinstance(magnets, _array_like):
+        magnets = (magnets, )
+    filepath = pathlib.Path(filepath)
+    suffix = filepath.suffix.lower()
+    if suffix in _FORMAT_YAML:
+        lib = yaml
+        kwargs = {}
+    elif suffix in _FORMAT_JSON:
+        lib = json
+        kwargs = {"default": str, "sort_keys": True, "indent": 4}
+    else:
+        raise NotImplementedError(f"File type {suffix} not supported")
+    configuration = [m._to_dict() for m in magnets]
+    with open(filepath.as_posix(), "w") as f:
+        # Both `json` and `yaml` libraries offer similar interfaces
+        lib.dump(configuration, f, **kwargs)
+    print("Configuration written to `{}`".format(filepath.as_posix()))
+    return
+
+
+def from_file(filepath):
+    """Load a set of magnets from a yaml or json configuration file
+    
+    Parameters
+    ----------
+    filepath: str or pathlib object
+        The file from which to load the configuration
+    """
+    filepath = pathlib.Path(filepath)
+    suffix = filepath.suffix.lower()
+    if suffix in _FORMAT_YAML:
+        lib = yaml
+        kwargs = {}
+    elif suffix in _FORMAT_JSON:
+        lib = json
+        kwargs = {}
+    else:
+        raise NotImplementedError(f"File type {suffix} not supported")
+    with open(filepath.as_posix(), "r") as f:
+        config = lib.load(f, **kwargs)
+    output = []
+    mtypes = {
+            "RectangularCoil": sources.RectangularCoil,
+              "CircularCoil": sources.CircularCoil,
+              "PermanentMagnet": sources.PermanentMagnet,
+              "CoilPair": sources.CoilPair
+        }
+    for magnet in config:
+        mtype = mtypes[magnet["class"]]
+        m = mtype._from_dict(magnet)
+        output.append(m)
+    return output
+        
+    

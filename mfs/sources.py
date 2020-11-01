@@ -51,7 +51,7 @@ class Magnet(object):
     Specific kinds of magnets extend this class to calculate the exact form of
     the magnetic field arising. """
 
-    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0):
+    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
         """Initialise the generic magnet.
         
         Parameters
@@ -69,6 +69,8 @@ class Magnet(object):
         phi: float, optional
             Rotation of the yDash-zDash axis around the X axis in degrees.
             Defaults to 0
+        name: str, optional
+            Human readable label to attach
         """
         self.strength = strength
         self.idx = 0
@@ -76,6 +78,7 @@ class Magnet(object):
         self._phi = phi
         self.rDash = np.array(rDash)
         self.dimsDash = dimsDash.copy()
+        self.name = name
         self.fmat = random.sample(["b", "g", "r", "c", "m", "y", "k"], 1)[0] + "-"
         # This is a bit of a fudge - pick a colour for use in plotting this magnet in future.
         # This is relevant where a single magnet may be plotted as several separate lines in matplotlib
@@ -228,7 +231,36 @@ class Magnet(object):
             )
             axes.set_zlabel(projection[a3p])
         return
+    
+    
+    def _to_dict(self):
+        output = {
+                "name": self.name if self.name is not None else "",
+                "class": str(type(self)).split("'")[1].split(".")[-1],
+                "strength": self.strength,
+                "origin": self.rDash.tolist(),
+                "dimensions": self.dimsDash,
+                "theta": float(self.theta_deg),
+                "phi": float(self.phi_deg),
+                  }
+        return output
+    
+    @classmethod
+    def _from_dict(cls, dic):
+        """
+        Create magnet from a dictionary
+        """
+        m = cls(
+                strength=dic["strength"],
+                rDash=dic["origin"],
+                dimsDash=dic["dimensions"],
+                theta=dic["theta"],
+                phi=dic["phi"],
+                name=dic["name"]
+                )
+        return m
 
+        
 
 class CircularCoil(Magnet):
 
@@ -262,8 +294,8 @@ class CircularCoil(Magnet):
         * ``radius``: float
     """
 
-    def __init__(self, strength, rDash, dimsDash, theta, phi=0):
-        super(CircularCoil, self).__init__(strength, rDash, dimsDash, theta, phi)
+    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
+        super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self._write_magnet_limits()
         return
 
@@ -366,8 +398,8 @@ class RectangularCoil(Magnet):
           Full length of coil along ``zDash`` axis
     """
 
-    def __init__(self, strength, rDash, dimsDash, theta, phi):
-        super(RectangularCoil, self).__init__(strength, rDash, dimsDash, theta, phi)
+    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
+        super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self._write_magnet_limits()
         return
 
@@ -463,8 +495,8 @@ class PermanentMagnet(Magnet):
             Rotation of the ``yDash-zDash`` axis around the X axis in degrees
     """
 
-    def __init__(self, strength, rDash, dimsDash, theta, phi=0):
-        super(PermanentMagnet, self).__init__(strength, rDash, dimsDash, theta, phi)
+    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
+        super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self._write_magnet_limits()
         pass
 
@@ -642,8 +674,8 @@ class CoilPair(Magnet):
         Rotation of Dash frame around X axis
         """
 
-    def __init__(self, strength, rDash, dimsDash, theta, phi):
-        super(CoilPair, self).__init__(strength, rDash, dimsDash, theta, phi)
+    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
+        super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self._handle_text_arguments()
         self._create_magnets()
 
