@@ -12,12 +12,12 @@ _array_like = (list, tuple, np.ndarray, np.ma.MaskedArray)
 _ncpu = multiprocessing.cpu_count()
 
 _FORMAT_YAML = (".yaml", ".yml")
-_FORMAT_JSON = (".json")
-
-
+_FORMAT_JSON = (".json", )
 
 
 """Rotation functions"""
+
+
 def rotate_around_z(theta):
     """Calculcate the rotation matrix to rotate around the Z-axis by angle theta
     (radians)
@@ -58,11 +58,7 @@ def rotate_around_x(phi):
         vector around the X-axis by theta
     """
     return np.array(
-        [
-            [1, 0, 0],
-            [0, np.cos(phi), -np.sin(phi)],
-            [0, np.sin(phi), np.cos(phi)]
-        ]
+        [[1, 0, 0], [0, np.cos(phi), -np.sin(phi)], [0, np.sin(phi), np.cos(phi)]]
     )
 
 
@@ -186,6 +182,8 @@ def rotate_to_normal_frame(rDash, theta, phi):
 
 
 """Projection functions"""
+
+
 def evaluate_axis_projection(projection):
     """Interpret a 2D projection request
     
@@ -245,6 +243,7 @@ def evaluate_axis_projection(projection):
         axThreePos = 3 - (axOnePos + axTwoPos)
     return axOnePos, axTwoPos, axThreePos
 
+
 def plot_magnet_positions(magnets, axes, projection):
     """
     Plot the outline of all magnets on the provided axes
@@ -268,13 +267,12 @@ def plot_magnet_positions(magnets, axes, projection):
             * global dimension z onto axes dimension x
             * global dimension x onto axes dimension y
             * global dimension y onto axes projection z
-    """ 
+    """
     if not isinstance(magnets, _array_like):
-        magnets = (magnets, )
+        magnets = (magnets,)
     for magnet in magnets:
         magnet.plot_magnet_position(axes, projection)
     return
-
 
 
 def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
@@ -309,7 +307,7 @@ def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
         centre = np.array(centre)
     if not isinstance(magnets, _array_like):
         magnets = (magnets,)
-    a1p, a2p, a3p = evaluate_axis_projection(projection) 
+    a1p, a2p, a3p = evaluate_axis_projection(projection)
     axOneLimLow = centre[a1p] - limit
     axOneLimHigh = centre[a1p] + limit
     axis = np.linspace(axOneLimLow, axOneLimHigh, points)
@@ -327,7 +325,9 @@ def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
     return axis, B_field
 
 
-def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, threads=_ncpu):
+def plot_vector_B_field(
+    magnets, axes, centre, limit, projection, points=50, threads=_ncpu
+):
     """Produce a 2D quiver plot of the vector B-field arising from a set of magnets
     
     Plot a grid of arrows indicating the direction and magnitude of the vector
@@ -371,7 +371,7 @@ def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, thr
         ``points x points`` array storing the ``j'th`` component of the B field
         at those locations. ``j`` determed as the second element of ``projection``
     """
-    if not isinstance(magnets, _array_like): 
+    if not isinstance(magnets, _array_like):
         # if a single magnet is passed to this program, then turn it into a list of magnets for simplicity.
         magnets = (magnets,)
     # The risk with multiprocessing is that completion is contingent on the slowest process
@@ -406,13 +406,13 @@ def plot_vector_B_field(magnets, axes, centre, limit, projection, points=50, thr
     for i, a1 in enumerate(axOne):
         for j, a2 in enumerate(axTwo):
             # i and j are indicies for the location of the rspace co-ordinate within the grids X and Y
-            for m in unwrapped:  
+            for m in unwrapped:
                 # Each magnet is passed in separately, since if the worker has to iterate over the list, it runs into the GIL limitation
                 coord = np.zeros(3)
                 coord[a1p] = a1
                 coord[a2p] = a2
                 coord[a3p] = centre[a3p]
-                argument = [m, coord, i, j] 
+                argument = [m, coord, i, j]
                 # i and j are passed to the function (and passed back) so that we do not rely on synchronous threading
                 positions.append(argument)
     if not threads or threads == 1:
@@ -474,7 +474,7 @@ def print_field_gradient(magnets, centre, label=""):
     print(
         "%s: x axis gradient: %.3g G/cm"
         % (label, ((B1abs - B0abs) * 1e4 / (delta / 1e-2)))
-    ) 
+    )
     # The factor multiplication converts from an absolute difference in Tesla to a gradient in G/cm
     print(
         "%s: y axis gradient: %.3g G/cm"
@@ -494,7 +494,6 @@ def _get_axes_ndim(axes):
     return n
 
 
-
 def to_file(magnets, filepath):
     """Write the magnet state to a yaml or json configuration file
     
@@ -510,7 +509,7 @@ def to_file(magnets, filepath):
         The file should end in either `.yml`, `.yaml` or `.json`.
     """
     if not isinstance(magnets, _array_like):
-        magnets = (magnets, )
+        magnets = (magnets,)
     filepath = pathlib.Path(filepath)
     suffix = filepath.suffix.lower()
     if suffix in _FORMAT_YAML:
@@ -551,15 +550,13 @@ def from_file(filepath):
         config = lib.load(f, **kwargs)
     output = []
     mtypes = {
-            "RectangularCoil": sources.RectangularCoil,
-              "CircularCoil": sources.CircularCoil,
-              "PermanentMagnet": sources.PermanentMagnet,
-              "CoilPair": sources.CoilPair
-        }
+        "RectangularCoil": sources.RectangularCoil,
+        "CircularCoil": sources.CircularCoil,
+        "PermanentMagnet": sources.PermanentMagnet,
+        "CoilPair": sources.CoilPair,
+    }
     for magnet in config:
         mtype = mtypes[magnet["class"]]
         m = mtype._from_dict(magnet)
         output.append(m)
     return output
-        
-    

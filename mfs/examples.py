@@ -8,6 +8,7 @@ DEBUG = False
 # this code without getting caught by the blocking UI calls
 # Users studying this code may assume that DEBUG is ALWAYS False
 
+
 def permanent_magnets():
     """Create a pair of permanent magnets, some distance away from the origin
     

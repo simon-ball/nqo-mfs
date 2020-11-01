@@ -80,8 +80,8 @@ def test_inits():
 
 
 def test_group_rotation_consistency():
-    '''Verify that, where a group object exists, it implements identical rotation
-    to each of its member objects'''
+    """Verify that, where a group object exists, it implements identical rotation
+    to each of its member objects"""
     strength = 1
     origin = (-1, 2, 3)
     m = sources.CoilPair(strength, origin, dimsDash=dims_pair_circ, theta=27, phi=-15)
@@ -89,7 +89,7 @@ def test_group_rotation_consistency():
     rDash = m.rotate_to_dashed_frame(r)
     for single in m.magnets:
         assert np.array_equal(single.rotate_to_dashed_frame(r), rDash)
-    
+
     rDash = (0, -0.2, 26)
     r = m.rotate_to_normal_frame(rDash)
     for single in m.magnets:
@@ -98,7 +98,7 @@ def test_group_rotation_consistency():
 
 
 def test_field_calculcation_rect():
-    '''
+    """
     Test for the absolute accuracy of the rectangular coil, given the simplest case
     Single square coil with sides 1 metre in length
     Dashed frame equal to global frame
@@ -106,27 +106,28 @@ def test_field_calculcation_rect():
     
     Values given to 4 decimal places only.
     Values are currently NOT, repeat NOT, calculated independently (2020-11-01)
-    '''
+    """
     strength = 1
-    origin = (0,0,0)
+    origin = (0, 0, 0)
     theta = 0
     phi = 0
     dimsDash = {"axDash": 1, "azDash": 1}
     m = sources.RectangularCoil(strength, origin, dimsDash, theta, phi)
-    
+
     answers = [
-            [(1,2,3), (8.2906e-10, -2.2546e-10, 2.4903e-9)],
-            [(0.01, 0.01, 0.5), (3.1484e-10, 4.4720e-7, 2.0000e-5)],
-            [(-0.5, 0.01, -0.5), (-1.0000e-6, 1.4140e-7, -1.0000e-6)],
-        ]
+        [(1, 2, 3), (8.2906e-10, -2.2546e-10, 2.4903e-9)],
+        [(0.01, 0.01, 0.5), (3.1484e-10, 4.4720e-7, 2.0000e-5)],
+        [(-0.5, 0.01, -0.5), (-1.0000e-6, 1.4140e-7, -1.0000e-6)],
+    ]
     for (r, b_field) in answers:
         assert np.allclose(m.get_B_field(r), np.array(b_field), atol=5e-4, rtol=1e-4)
-    
+
     # Including rotation and/or offset?
     return
 
+
 def test_field_calculation_circ():
-    '''
+    """
     Test for the absolute accuracy of the circular coil, given the simplest case
     Single circular coil with 1m radius
     Dashed frame equal to global frame
@@ -134,24 +135,25 @@ def test_field_calculation_circ():
     
     Values given to 4 decimal places only.
     Values are currently NOT, repeat NOT, calculated independently (2020-11-01)
-    '''
+    """
     strength = 1
-    origin = (0,0,0)
+    origin = (0, 0, 0)
     theta = 0
     phi = 0
     dimsDash = {"radius": 1}
     m = sources.CircularCoil(strength, origin, dimsDash, theta, phi)
     answers = [
-            [(1,2,3),            ( 2.6778e-09, -3.8767e-10,  8.0333e-09)],
-            [(0.01, 0.02, -0.1), ( 1.9192e-10,  6.3273e-07, -1.9192e-09)],
-            [(-1.2, 2.6, 0.001), (-1.2371e-08,  1.8346e-08,  1.0309e-11)],
-        ]
+        [(1, 2, 3), (2.6778e-09, -3.8767e-10, 8.0333e-09)],
+        [(0.01, 0.02, -0.1), (1.9192e-10, 6.3273e-07, -1.9192e-09)],
+        [(-1.2, 2.6, 0.001), (-1.2371e-08, 1.8346e-08, 1.0309e-11)],
+    ]
     for (r, b_field) in answers:
         assert np.allclose(m.get_B_field(r), np.array(b_field), atol=5e-4, rtol=1e-4)
     return
 
+
 def test_field_calculation_perm():
-    '''
+    """
     Test for the absolute accuracy of the permanent magnet, given the simplest case
     Perfect cuboid magnet, somewhat weaker than a typical rare-earth magnet
     Dashed frame equal to global frame
@@ -159,22 +161,21 @@ def test_field_calculation_perm():
     
     Values given to 4 decimal places only.
     Values are currently NOT, repeat NOT, calculated independently (2020-11-01)
-    '''
+    """
     strength = 1e8
-    origin = (0,0,0)
+    origin = (0, 0, 0)
     theta = 0
     phi = 0
     dimsDash = {"axDash": 0.1, "ayDash": 0.1, "azDash": 0.1}
     m = sources.PermanentMagnet(strength, origin, dimsDash, theta, phi)
     answers = [
-            [(1,2,3),            (-8.1815e-05,  2.7272e-05, -2.4544e-04)],
-            [(0.01, 0.02, -0.1), (-0.3305,      7.5806,      3.9551)],
-            [(-1.2, 2.6, 0.001), ( 4.8612e-04, -6.2738e-04, -4.0510e-07)],
-        ]
+        [(1, 2, 3), (-8.1815e-05, 2.7272e-05, -2.4544e-04)],
+        [(0.01, 0.02, -0.1), (-0.3305, 7.5806, 3.9551)],
+        [(-1.2, 2.6, 0.001), (4.8612e-04, -6.2738e-04, -4.0510e-07)],
+    ]
     for (r, b_field) in answers:
         assert np.allclose(m.get_B_field(r), np.array(b_field), atol=5e-4, rtol=1e-4)
     return
-
 
 
 def test_field_calculcation():
