@@ -13,11 +13,11 @@ phi (rotation around X).
 Functions are provided for visualising the position of each magnet in various
 projections. 
 """
-
+import random
 import numpy as np
 from numpy import cos, sin, sqrt, power
 from scipy.special import ellipk, ellipe
-import random
+
 
 from . import helpers
 
@@ -51,11 +51,13 @@ class Magnet(object):
     Specific kinds of magnets extend this class to calculate the exact form of
     the magnetic field arising. """
 
-    def __init__(self, rDash, dimsDash, theta=0, phi=0):
+    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0):
         """Initialise the generic magnet.
         
         Parameters
         ----------
+        strength: float
+            Magnet strength. Meaning varies by magnet type
         rDash: list
             The origin of the magnet in the Dashed co-ordinate frame
         dimsDash: dict
@@ -68,6 +70,7 @@ class Magnet(object):
             Rotation of the yDash-zDash axis around the X axis in degrees.
             Defaults to 0
         """
+        self.strength = strength
         self.idx = 0
         self._theta = theta
         self._phi = phi
@@ -260,8 +263,7 @@ class CircularCoil(Magnet):
     """
 
     def __init__(self, strength, rDash, dimsDash, theta, phi=0):
-        super(CircularCoil, self).__init__(rDash, dimsDash, theta, phi)
-        self.I = strength
+        super(CircularCoil, self).__init__(strength, rDash, dimsDash, theta, phi)
         self._write_magnet_limits()
         return
 
@@ -289,7 +291,7 @@ class CircularCoil(Magnet):
         # !!NOTE!! within this function, r is treated as a **radius** and not as a vector position
 
         # Axial term, i.e. along yDash axis
-        prefactor1 = mu0 * self.I / (2 * pi)
+        prefactor1 = mu0 * self.strength / (2 * pi)
         prefactor2 = 1.0 / np.sqrt(np.power(self.radius + r, 2) + np.power(yDash, 2))
         elliptic_argument = (
             4 * self.radius * r / (np.power(self.radius + r, 2) + np.power(yDash, 2))
@@ -365,8 +367,7 @@ class RectangularCoil(Magnet):
     """
 
     def __init__(self, strength, rDash, dimsDash, theta, phi):
-        super(RectangularCoil, self).__init__(rDash, dimsDash, theta, phi)
-        self.I = strength
+        super(RectangularCoil, self).__init__(strength, rDash, dimsDash, theta, phi)
         self._write_magnet_limits()
         return
 
@@ -386,7 +387,7 @@ class RectangularCoil(Magnet):
         return
 
     def get_BDash_field(self, rDash):
-        prefactor = mu0 * self.I / (4 * pi)
+        prefactor = mu0 * self.strength / (4 * pi)
         xD = rDash[0] - self.rDash[0]
         yD = rDash[1] - self.rDash[1]
         zD = rDash[2] - self.rDash[2]
@@ -463,8 +464,7 @@ class PermanentMagnet(Magnet):
     """
 
     def __init__(self, strength, rDash, dimsDash, theta, phi=0):
-        super(PermanentMagnet, self).__init__(rDash, dimsDash, theta, phi)
-        self.M = strength
+        super(PermanentMagnet, self).__init__(strength, rDash, dimsDash, theta, phi)
         self._write_magnet_limits()
         pass
 
@@ -548,7 +548,7 @@ class PermanentMagnet(Magnet):
             np.array([self.rDash[0], self.rDash[1], self.rDash[2]])
         )
         arrow_stop = self.rotate_to_normal_frame(
-            np.array([0, np.sign(self.M) * self.ayD, 0])
+            np.array([0, np.sign(self.strength) * self.ayD, 0])
         )
         self.arrow = [arrow_start, arrow_stop]
         pass
@@ -601,7 +601,7 @@ class PermanentMagnet(Magnet):
                             )
                         )
                     )
-        BDash = (mu0 * self.M / (4 * pi)) * np.array([-BxDash, ByDash, -BzDash])
+        BDash = (mu0 * self.strength / (4 * pi)) * np.array([-BxDash, ByDash, -BzDash])
         return BDash
 
 
@@ -643,8 +643,7 @@ class CoilPair(Magnet):
         """
 
     def __init__(self, strength, rDash, dimsDash, theta, phi):
-        super(CoilPair, self).__init__(rDash, dimsDash, theta, phi)
-        self.I = strength
+        super(CoilPair, self).__init__(strength, rDash, dimsDash, theta, phi)
         self._handle_text_arguments()
         self._create_magnets()
 
@@ -740,10 +739,10 @@ class CoilPair(Magnet):
                 self.rDash[2],
             ]
             upper_coil = self.shape(
-                self.I * n, upper_origin, self.dimsDash, self.theta_deg, self.phi_deg
+                self.strength * n, upper_origin, self.dimsDash, self.theta_deg, self.phi_deg
             )  # For overlapped coils, simply implement 1 turn with N* higher current in it.
             lower_coil = self.shape(
-                self.I * n * self.conf,
+                self.strength * n * self.conf,
                 lower_origin,
                 self.dimsDash,
                 self.theta_deg,
@@ -780,12 +779,12 @@ class CoilPair(Magnet):
                     params["radius"] += b * radSpacing
                     self.magnets.append(
                         self.shape(
-                            self.I, upper_origin, params, self.theta_deg, self.phi_deg
+                            self.strength, upper_origin, params, self.theta_deg, self.phi_deg
                         )
                     )
                     self.magnets.append(
                         self.shape(
-                            self.I * self.conf,
+                            self.strength * self.conf,
                             lower_origin,
                             params,
                             self.theta_deg,

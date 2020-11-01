@@ -46,7 +46,7 @@ magnet_dims_mapping = [
 def test_base_magnet_class():
     """Tests that the base class can be initialised, and offers the correct
     interface"""
-    m = sources.Magnet(rDash=(0, 0, 0), dimsDash={}, theta=0, phi=0)
+    m = sources.Magnet(strength=0, rDash=(0, 0, 0), dimsDash={}, theta=0, phi=0)
     with pytest.raises(NotImplementedError):
         m.get_BDash_field((0, 0, 0))
         m.plot_magnet_position(None, None)
