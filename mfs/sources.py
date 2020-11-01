@@ -26,6 +26,7 @@ pi = np.pi
 mu0 = 4 * pi * 1e-7
 
 
+
 class Magnet(object):
     """A representation of a generic magnetic field source (e.g. permanent magnet,
     solenoid etc). The magnet is defined in its own co-ordinate axis ``r'=(x',y',z')``,
@@ -74,7 +75,7 @@ class Magnet(object):
         self.dimsDash = dimsDash.copy()
         self.fmat = random.sample(["b", "g", "r", "c", "m", "y", "k"], 1)[0] + "-"
         # This is a bit of a fudge - pick a colour for use in plotting this magnet in future.
-        # THis is relevant where a single magnet may be plotted as several separate lines in matplotlib
+        # This is relevant where a single magnet may be plotted as several separate lines in matplotlib
         # i.e. either a rectangular PermanentMagnet or a CoilPair
         pass
 
@@ -248,7 +249,7 @@ class CircularCoil(Magnet):
     
     Parameters
     ----------
-    I: float
+    strength: float
         Current flowing through coil
     rDash: 3 element list or array
             Position of origin of coil
@@ -278,6 +279,7 @@ class CircularCoil(Magnet):
 
     def get_BDash_field(self, rDash):
         # First in polar co-ordinates
+#        xDash, yDash, zDash = rDash - self.rDash
         xDash = rDash[0] - self.rDash[0]
         yDash = rDash[1] - self.rDash[1]
         zDash = rDash[2] - self.rDash[2]  
@@ -609,7 +611,7 @@ class CoilPair(Magnet):
     
     Parameters
     ----------
-    I: float
+    strength: float
         Current flowing through coils
     rDash: 3 entry list or array
         Origin of coils in Dash co-ordinate frame
@@ -640,9 +642,9 @@ class CoilPair(Magnet):
         Rotation of Dash frame around X axis
         """
 
-    def __init__(self, I, rDash, dimsDash, theta, phi):
+    def __init__(self, strength, rDash, dimsDash, theta, phi):
         super(CoilPair, self).__init__(rDash, dimsDash, theta, phi)
-        self.I = I
+        self.I = strength
         self._handle_text_arguments()
         self._create_magnets()
 
