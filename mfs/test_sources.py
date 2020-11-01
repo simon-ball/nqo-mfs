@@ -5,7 +5,7 @@ from numpy import radians
 
 from . import helpers, sources
 
-n = 100
+n = 35
 angles = np.linspace(0, 360, n)
 unit_x = np.array([1.0, 0.0, 0.0])
 unit_y = np.array([0.0, 1.0, 0.0])
@@ -79,6 +79,104 @@ def test_inits():
     return
 
 
+def test_group_rotation_consistency():
+    '''Verify that, where a group object exists, it implements identical rotation
+    to each of its member objects'''
+    strength = 1
+    origin = (-1, 2, 3)
+    m = sources.CoilPair(strength, origin, dimsDash=dims_pair_circ, theta=27, phi=-15)
+    r = (18, 2.5, -3.14)
+    rDash = m.rotate_to_dashed_frame(r)
+    for single in m.magnets:
+        assert np.array_equal(single.rotate_to_dashed_frame(r), rDash)
+    
+    rDash = (0, -0.2, 26)
+    r = m.rotate_to_normal_frame(rDash)
+    for single in m.magnets:
+        assert np.array_equal(single.rotate_to_normal_frame(rDash), r)
+    return
+
+
+def test_field_calculcation_rect():
+    '''
+    Test for the absolute accuracy of the rectangular coil, given the simplest case
+    Single square coil with sides 1 metre in length
+    Dashed frame equal to global frame
+    Current of 1A flowing through coil
+    
+    Values given to 4 decimal places only.
+    Values are currently NOT, repeat NOT, calculated independently (2020-11-01)
+    '''
+    strength = 1
+    origin = (0,0,0)
+    theta = 0
+    phi = 0
+    dimsDash = {"axDash": 1, "azDash": 1}
+    m = sources.RectangularCoil(strength, origin, dimsDash, theta, phi)
+    
+    answers = [
+            [(1,2,3), (8.2906e-10, -2.2546e-10, 2.4903e-9)],
+            [(0.01, 0.01, 0.5), (3.1484e-10, 4.4720e-7, 2.0000e-5)],
+            [(-0.5, 0.01, -0.5), (-1.0000e-6, 1.4140e-7, -1.0000e-6)],
+        ]
+    for (r, b_field) in answers:
+        assert np.allclose(m.get_B_field(r), np.array(b_field), atol=5e-4, rtol=1e-4)
+    
+    # Including rotation and/or offset?
+    return
+
+def test_field_calculation_circ():
+    '''
+    Test for the absolute accuracy of the circular coil, given the simplest case
+    Single circular coil with 1m radius
+    Dashed frame equal to global frame
+    Current of 1A flowing through coil
+    
+    Values given to 4 decimal places only.
+    Values are currently NOT, repeat NOT, calculated independently (2020-11-01)
+    '''
+    strength = 1
+    origin = (0,0,0)
+    theta = 0
+    phi = 0
+    dimsDash = {"radius": 1}
+    m = sources.CircularCoil(strength, origin, dimsDash, theta, phi)
+    answers = [
+            [(1,2,3),            ( 2.6778e-09, -3.8767e-10,  8.0333e-09)],
+            [(0.01, 0.02, -0.1), ( 1.9192e-10,  6.3273e-07, -1.9192e-09)],
+            [(-1.2, 2.6, 0.001), (-1.2371e-08,  1.8346e-08,  1.0309e-11)],
+        ]
+    for (r, b_field) in answers:
+        assert np.allclose(m.get_B_field(r), np.array(b_field), atol=5e-4, rtol=1e-4)
+    return
+
+def test_field_calculation_perm():
+    '''
+    Test for the absolute accuracy of the permanent magnet, given the simplest case
+    Perfect cuboid magnet, somewhat weaker than a typical rare-earth magnet
+    Dashed frame equal to global frame
+    1e8 A/M magnetisation
+    
+    Values given to 4 decimal places only.
+    Values are currently NOT, repeat NOT, calculated independently (2020-11-01)
+    '''
+    strength = 1e8
+    origin = (0,0,0)
+    theta = 0
+    phi = 0
+    dimsDash = {"axDash": 0.1, "ayDash": 0.1, "azDash": 0.1}
+    m = sources.PermanentMagnet(strength, origin, dimsDash, theta, phi)
+    answers = [
+            [(1,2,3),            (-8.1815e-05,  2.7272e-05, -2.4544e-04)],
+            [(0.01, 0.02, -0.1), (-0.3305,      7.5806,      3.9551)],
+            [(-1.2, 2.6, 0.001), ( 4.8612e-04, -6.2738e-04, -4.0510e-07)],
+        ]
+    for (r, b_field) in answers:
+        assert np.allclose(m.get_B_field(r), np.array(b_field), atol=5e-4, rtol=1e-4)
+    return
+
+
+
 def test_field_calculcation():
     """Test that the field calculcations work as expected"""
     for dut, dims in magnet_dims_mapping:
@@ -149,13 +247,4 @@ def rotation_consistency_t(cls_under_test, dims):
         )
         new_field = np.array([m3.get_B_field(r) for r in new_axis])
         assert np.allclose(new_field, field, atol=1e-6, rtol=1e-6)
-
-    #        m4 = cls_under_test(
-    #            strength, origin, dimsDash=dims, theta=-angle/3, phi=angle
-    #        )
-    #        new_axis = np.array(
-    #            [helpers.rotate_to_normal_frame(r, theta=-angle/3, phi=angle) for r in sample_axis]
-    #        )
-    #        new_field = np.array([m4.get_B_field(r) for r in new_axis])
-    #        assert np.allclose(new_field, field, atol=1e-6, rtol=1e-6)
     return
