@@ -70,7 +70,7 @@ class Magnet(object):
         self.idx = 0
         self._theta = theta
         self._phi = phi
-        self.rDash = rDash
+        self.rDash = np.array(rDash)
         self.dimsDash = dimsDash.copy()
         self.fmat = random.sample(["b", "g", "r", "c", "m", "y", "k"], 1)[0] + "-"
         # This is a bit of a fudge - pick a colour for use in plotting this magnet in future.
@@ -271,7 +271,7 @@ class CircularCoil(Magnet):
         ang = np.linspace(0, 2 * pi, n)
         xDash = (self.radius * sin(ang)) + self.rDash[0]
         zDash = (self.radius * cos(ang)) + self.rDash[2]
-        yDash = self.rDash[1]
+        yDash = [self.rDash[1] for angle in ang]
         coordinatesDash = np.array([xDash, yDash, zDash])
         self.coordinates = self.rotate_to_normal_frame(coordinatesDash)
         return
@@ -646,7 +646,6 @@ class CoilPair(Magnet):
         self._handle_text_arguments()
         self._create_magnets()
 
-    @property
     def __next__(self):
         self.idx += 1
         try:
