@@ -25,6 +25,11 @@ Overview
     mfs.helpers.plot_vector_B_field
     mfs.helpers.print_field_gradient
 
+.. rubric:: Saving to/from file
+
+.. autosummary:: 
+    mfs.helpers.to_file
+    mfs.helpers.from_file
 
 
 Detailed Documentation
