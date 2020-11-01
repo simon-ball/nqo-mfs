@@ -211,6 +211,8 @@ class Magnet(object):
         """
         # self.coordinates must be provided by the geometry-specific class
         a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
+        axes.set_xlabel(projection[a1p])
+        axes.set_ylabel(projection[a2p])
         if helpers._get_axes_ndim(axes) == 2:
             axes.plot(self.coordinates[a1p], self.coordinates[a2p], self.fmat)
         elif helpers._get_axes_ndim(axes) == 3:
@@ -220,6 +222,7 @@ class Magnet(object):
                 self.coordinates[a3p],
                 self.fmat,
             )
+            axes.set_zlabel(projection[a3p])
         return
 
 
