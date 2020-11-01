@@ -20,6 +20,7 @@ from scipy.special import ellipk, ellipe
 
 
 from . import helpers
+from .version import __version__
 
 """Constants"""
 pi = np.pi
@@ -242,6 +243,7 @@ class Magnet(object):
                 "dimensions": self.dimsDash,
                 "theta": float(self.theta_deg),
                 "phi": float(self.phi_deg),
+                "mfs_version": __version__,
                   }
         return output
     
