@@ -17,7 +17,7 @@ import random
 import numpy as np
 from numpy import cos, sin, sqrt, power
 from scipy.special import ellipk, ellipe
-
+from enum import Enum
 
 from . import helpers
 from .version import __version__
@@ -219,8 +219,11 @@ class Magnet(object):
         """
         # self.coordinates must be provided by the geometry-specific class
         a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
-        axes.set_xlabel(projection[a1p])
-        axes.set_ylabel(projection[a2p])
+        try:
+            axes.set_xlabel(projection[0])
+            axes.set_ylabel(projection[1])
+        except:
+            pass
         if helpers._get_axes_ndim(axes) == 2:
             axes.plot(self.coordinates[a1p], self.coordinates[a2p], self.fmat)
         elif helpers._get_axes_ndim(axes) == 3:
@@ -262,10 +265,121 @@ class Magnet(object):
                 )
         return m
 
+class MagnetGroup(Magnet):
+    """A generic group of magnets
+    
+    Parameters
+    ----------
+    strength: float
+        Current flowing through coils
+    rDash: 3 entry list or array
+        Origin of coils in Dash co-ordinate frame
+    dimsDash: dict
+        Dictionary of coil pair parameters.
         
+        * ``spatially distributed``: bool
+            Should the programme calculate for each loop independently, or approximate by placing all coils in the same place?
+        * ``axial layers``: int
+            number of new layers further out along the yDash axis
+        * ``axial spacing``: float
+            distance between centres of layers in the axial direction
+        * ``radial layers``: int
+            number of new layers further out away from yDash axis
+        * ``radial spacing``: float
+            distance between centres of layers in the radial direction
+        * ``shape``: str
+            Valid entries are variations on ``circ``, ``circular``, ``rectangular``, ``r``, etc
+        * Required parameters for either ``RectangularCoil`` or ``CircularCoil``
+          (see the documentaiton for those classes)
+    theta: float, optional
+        Rotation of Dash frame around Z axis
+    phi: float, optional
+        Rotation of Dash frame around X axis
+    name: str, optional
+        Human readable label for the magnet
+    """
+    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
+        super().__init__(strength, rDash, dimsDash, theta, phi, name)
+        self._magnets = []
+        self._make_magnets()
+        return
+
+    def __next__(self):
+        self.idx += 1
+        try:
+            return self.magnets[self.idx - 1]
+        except IndexError:
+            self.idx = 0
+            raise StopIteration
+
+    def __len__(self):
+        return len(self.magnets)
+
+    def _make_magnets(self):
+        """Create the set of basic magnets specified
+        """
+        # Shape
+        shape = self.dimsDash.get("shape").lower()
+        if shape in MagnetTypeString.RECT:
+            self.base = MagnetType.RECT
+        elif shape in MagnetTypeString.CIRC:
+            self.base = MagnetType.CIRC
+        elif shape in MagnetTypeString.PERM:
+            self.base = MagnetType.PERM
+            raise NotImplementedError("A group of permanent magnets is not currently supported")
+        else:
+            raise KeyError(f"Value `{shape}` not understood for keyword `shape`")
+        
+        # Verify that other keywords are present
+        spatial = self.dimsDash.get("spatially distributed") or self.dimsDash.get("spatially_distributed")
+        layers_ax = self.dimsDash.get("axial layers") or self.dimsDash.get("axial_layers")
+        layers_rad = self.dimsDash.get("radial layers") or self.dimsDash.get("radial_layers")
+        if spatial:
+            spacing_ax = self.dimsDash.get("axial spacing") or self.dimsDash.get("axial_spacing")
+            spacing_rad = self.dimsDash.get("radial spacing") or self.dimsDash.get("radial_spacing")
+        
+        # Initialise the relevant magnets
+        if spatial:
+            # Create many indpendent coils
+            for ax in layers_ax:
+                for rad in layers_rad:
+                    origin = self.rDash + (0, ax*spacing_ax, 0)
+                    dims = self.dimsDash.copy()
+                    if self.Base == MagnetType.RECT:
+                        # Recall: full length, so expands by double the spacing
+                        dims["axDash"] += (2 * rad * spacing_rad)
+                        dims["azDash"] += (2 * rad * spacing_rad)
+                    elif self.Base == MagnetType.CIRC:
+                        dims["radius"] += (rad * spacing_rad)
+                    name = f"{self.name}:{ax}:{rad}"
+                    m = self.Base(self.strength, origin, dims, self.theta_deg, self.phi_deg, name)
+                    self._magnets.append(m)
+        else:
+            # Create a single coil with an increased current
+            name = f"{self.name}:combined"
+            m = self.Base(
+                    self.strength * layers_ax * layers_rad,
+                    self.rDash, self.dimsDash, self.theta_deg, self.phi_deg,
+                    name
+                    )
+            self._magnets.append(m)
+        return
+
+    def get_BDash_field(self, rDash):
+        BDash = np.zeros(3)
+        for m in self.magnets:
+            BDash += m.get_BDash_field(rDash)
+        return BDash
+
+    def plot_magnet_position(self, axes, projection):
+        for m in self.magnets:
+            m.plot_magnet_position(axes, projection)
+        return
+
+
+
 
 class CircularCoil(Magnet):
-
     """A representation of a single circular EM coil. The coil is defined as having 
     its origin at rDash=(x',y',z') and its axis along the yDash axis. A positive
     current flowing results in a field which, at the coil origin, points along the
@@ -294,6 +408,12 @@ class CircularCoil(Magnet):
         Dictionary of parameters. Required parameters for a circular coil are
         
         * ``radius``: float
+    theta: float, optional
+        Rotation of Dash frame around Z axis
+    phi: float, optional
+        Rotation of Dash frame around X axis
+    name: str, optional
+        Human readable label for the magnet
     """
 
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
@@ -398,6 +518,12 @@ class RectangularCoil(Magnet):
           Full length of coil along ``xDash`` axis
         * ``azDash``: float
           Full length of coil along ``zDash`` axis
+    theta: float, optional
+        Rotation of Dash frame around Z axis
+    phi: float, optional
+        Rotation of Dash frame around X axis
+    name: str, optional
+        Human readable label for the magnet
     """
 
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
@@ -480,21 +606,23 @@ class PermanentMagnet(Magnet):
     
     Parameters
     ----------
-        strength: float
-            The magnetisation of the magnet, in Tesla per metre
-        rDash: list
-            The origin of the magnet in the Dashed co-ordinate frame
-        dimsDash: dict
-            Dictionary of parameters. The required parameters for a permanent magnet are
-            
-            * ``axDash``
-            * ``ayDash``
-            * ``azDash``
-            All three parameters are the FULL lengths of the magnet, in the x', y', z' frame, in metres
-        theta: float
-            Rotation of the ``xDash-yDash`` axis around the Z axis in degrees
-        phi: float
-            Rotation of the ``yDash-zDash`` axis around the X axis in degrees
+    strength: float
+        The magnetisation of the magnet, in Tesla per metre
+    rDash: list
+        The origin of the magnet in the Dashed co-ordinate frame
+    dimsDash: dict
+        Dictionary of parameters. The required parameters for a permanent magnet are
+        
+        * ``axDash``
+        * ``ayDash``
+        * ``azDash``
+        All three parameters are the FULL lengths of the magnet, in the x', y', z' frame, in metres
+    theta: float, optional
+        Rotation of Dash frame around Z axis
+    phi: float, optional
+        Rotation of Dash frame around X axis
+    name: str, optional
+        Human readable label for the magnet
     """
 
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
@@ -670,11 +798,13 @@ class CoilPair(Magnet):
             Valid entries are variations on ``circ``, ``circular``, ``rectangular``, ``r``, etc
         * Required parameters for either ``RectangularCoil`` or ``CircularCoil``
           (see the documentaiton for those classes)
-    theta: float
+    theta: float, optional
         Rotation of Dash frame around Z axis
-    phi: float
+    phi: float, optional
         Rotation of Dash frame around X axis
-        """
+    name: str, optional
+        Human readable label for the magnet
+    """
 
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
         super().__init__(strength, rDash, dimsDash, theta, phi, name)
@@ -825,7 +955,7 @@ class CoilPair(Magnet):
                             self.phi_deg,
                         )
                     )
-        pass
+        return
 
     def get_BDash_field(self, rDash):
         BDash = np.zeros(3)
@@ -836,4 +966,37 @@ class CoilPair(Magnet):
     def plot_magnet_position(self, axes, projection):
         for m in self.magnets:
             m.plot_magnet_position(axes, projection)
-        pass
+        return
+
+
+
+class MagnetType(Enum):
+    RECT = RectangularCoil
+    CIRC = CircularCoil
+    PERM = PermanentMagnet
+    PAIR = CoilPair
+
+class MagnetTypeString(Enum):
+    RECT = (
+            "rect",
+            "rectangular",
+            "r",
+            "square",
+            "cube",
+            "cubic",
+        )
+    CIRC = (
+            "circ",
+            "circular",
+            "round",
+            "c",
+            "spherical",
+            "cylindrical",
+            "cylinder",
+        )
+    PERM = (
+            "perm",
+            "permanent",
+            "p",
+            "rare-earth",
+        )
