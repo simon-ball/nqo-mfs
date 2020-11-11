@@ -27,7 +27,6 @@ pi = np.pi
 mu0 = 4 * pi * 1e-7
 
 
-
 class Magnet(object):
     """A representation of a generic magnetic field source (e.g. permanent magnet,
     solenoid etc). The magnet is defined in its own co-ordinate axis ``r'=(x',y',z')``,
@@ -52,6 +51,7 @@ class Magnet(object):
     Specific kinds of magnets extend this class to calculate the exact form of
     the magnetic field arising.
     """
+
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
         """Initialise the generic magnet.
         
@@ -86,10 +86,8 @@ class Magnet(object):
         # i.e. either a rectangular PermanentMagnet or a CoilPair
         return
 
-
     def __iter__(self):
         return self
-
 
     def __next__(self):
         if self.idx == 0:
@@ -99,44 +97,36 @@ class Magnet(object):
             self.idx == 0
             raise StopIteration
 
-
     def __len__(self):
         return 1
-
 
     @property
     def theta_deg(self):
         """Return Theta in degrees"""
         return self._theta
 
-
     @property
     def theta(self):
         """return Theta in radians"""
         return np.radians(self._theta)
 
-
     @theta.setter
     def theta(self, _theta):
         self._theta = _theta
-
 
     @property
     def phi_deg(self):
         """return phi in degrees"""
         return self._phi
 
-
     @property
     def phi(self):
         """return phi in radians"""
         return np.radians(self._phi)
 
-
     @phi.setter
     def phi(self, _phi):
         self._phi = _phi
-
 
     def rotate_to_dashed_frame(self, r):
         """Angular rotation from the lab frame to the Dashed co-ordinate frame
@@ -153,7 +143,6 @@ class Magnet(object):
         """
         return helpers.rotate_to_dashed_frame(r, self.theta, self.phi)
 
-
     def rotate_to_normal_frame(self, rDash):
         """Angular rotation from the Dashed co-ordinate frame to the lab frame
 
@@ -168,7 +157,6 @@ class Magnet(object):
             The vector in the lab frame: ``r = (x, y, z)``
         """
         return helpers.rotate_to_normal_frame(rDash, self.theta, self.phi)
-
 
     def get_B_field(self, r):
         """Calculate the vector B field at a given position r in the lab frame
@@ -189,7 +177,6 @@ class Magnet(object):
         B = self.rotate_to_normal_frame(BDash)
         return B
 
-
     def get_BDash_field(self, rDash):
         """Calculate the vector B field at a given position rDash in the Dashed
         frame ``B(rDash) = B(xDash, yDash, zDash)``
@@ -205,7 +192,6 @@ class Magnet(object):
             The vector B field at position ``rDash`` in the Dashed co-ordinate frame
         """
         raise NotImplementedError("Must be implemented in geometry-specific class")
-
 
     def plot_magnet_position(self, axes, projection):
         """Plot the outline of the magnet on the provided axes
@@ -250,20 +236,18 @@ class Magnet(object):
             axes.set_zlabel(projection[a3p])
         return
 
-
     def _to_dict(self):
         output = {
-                "name": self.name if self.name is not None else "",
-                "class": str(type(self)).split("'")[1].split(".")[-1],
-                "strength": self.strength,
-                "origin": self.rDash.tolist(),
-                "dimensions": self.dimsDash,
-                "theta": float(self.theta_deg),
-                "phi": float(self.phi_deg),
-                "mfs_version": __version__,
-                  }
+            "name": self.name if self.name is not None else "",
+            "class": str(type(self)).split("'")[1].split(".")[-1],
+            "strength": self.strength,
+            "origin": self.rDash.tolist(),
+            "dimensions": self.dimsDash,
+            "theta": float(self.theta_deg),
+            "phi": float(self.phi_deg),
+            "mfs_version": __version__,
+        }
         return output
-
 
     @classmethod
     def _from_dict(cls, dic):
@@ -271,13 +255,13 @@ class Magnet(object):
         Create magnet from a dictionary
         """
         m = cls(
-                strength=dic["strength"],
-                rDash=dic["origin"],
-                dimsDash=dic["dimensions"],
-                theta=dic["theta"],
-                phi=dic["phi"],
-                name=dic["name"]
-                )
+            strength=dic["strength"],
+            rDash=dic["origin"],
+            dimsDash=dic["dimensions"],
+            theta=dic["theta"],
+            phi=dic["phi"],
+            name=dic["name"],
+        )
         return m
 
 
@@ -314,12 +298,12 @@ class MagnetGroup(Magnet):
     name: str, optional
         Human readable label for the magnet
     """
+
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
         super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self.magnets = []
         self._make_magnets()
         return
-
 
     def __next__(self):
         self.idx += 1
@@ -329,10 +313,8 @@ class MagnetGroup(Magnet):
             self.idx = 0
             raise StopIteration
 
-
     def __len__(self):
         return len(self.magnets)
-
 
     def _make_magnets(self):
         """Create the set of basic magnets specified
@@ -345,7 +327,9 @@ class MagnetGroup(Magnet):
             self.base = MagnetType.CIRC
         elif shape in MagnetTypeString.PERM:
             self.base = MagnetType.PERM
-            raise NotImplementedError("A group of permanent magnets is not currently supported")
+            raise NotImplementedError(
+                "A group of permanent magnets is not currently supported"
+            )
         else:
             raise ValueError(f"Value `{shape}` not understood for keyword `shape`")
         # Verify that other keywords are present
@@ -360,35 +344,38 @@ class MagnetGroup(Magnet):
             # Create many indpendent coils
             for ax in range(layers_ax):
                 for rad in range(layers_rad):
-                    origin = self.rDash + (0, ax*spacing_ax, 0)
+                    origin = self.rDash + (0, ax * spacing_ax, 0)
                     dims = self.dimsDash.copy()
                     if self.base == MagnetType.RECT:
                         # Recall: full length, so expands by double the spacing
-                        dims["axDash"] += (2 * rad * spacing_rad)
-                        dims["azDash"] += (2 * rad * spacing_rad)
+                        dims["axDash"] += 2 * rad * spacing_rad
+                        dims["azDash"] += 2 * rad * spacing_rad
                     elif self.base == MagnetType.CIRC:
-                        dims["radius"] += (rad * spacing_rad)
+                        dims["radius"] += rad * spacing_rad
                     name = f"{self.name}:{ax}:{rad}"
-                    m = self.base(self.strength, origin, dims, self.theta_deg, self.phi_deg, name)
+                    m = self.base(
+                        self.strength, origin, dims, self.theta_deg, self.phi_deg, name
+                    )
                     self.magnets.append(m)
         else:
             # Create a single coil with an increased current
             name = f"{self.name}:combined"
             m = self.base(
-                    self.strength * layers_ax * layers_rad,
-                    self.rDash, self.dimsDash, self.theta_deg, self.phi_deg,
-                    name
-                    )
+                self.strength * layers_ax * layers_rad,
+                self.rDash,
+                self.dimsDash,
+                self.theta_deg,
+                self.phi_deg,
+                name,
+            )
             self.magnets.append(m)
         return
-
 
     def get_BDash_field(self, rDash):
         BDash = np.zeros(3)
         for m in self.magnets:
             BDash += m.get_BDash_field(rDash)
         return BDash
-
 
     def plot_magnet_position(self, axes, projection):
         for m in self.magnets:
@@ -432,11 +419,11 @@ class CircularCoil(Magnet):
     name: str, optional
         Human readable label for the magnet
     """
+
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
         super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self._write_magnet_limits()
         return
-
 
     def _write_magnet_limits(self):
         """Generate co-ordinates for the `plot_magnet_position`"""
@@ -450,12 +437,11 @@ class CircularCoil(Magnet):
         self.coordinates = self.rotate_to_normal_frame(coordinatesDash)
         return
 
-
     def get_BDash_field(self, rDash):
         # First in polar co-ordinates
         xDash, yDash, zDash = rDash - self.rDash
         # These subtractions allow us to calculate as if the coil has its origin at (0,0,0)
-        r = np.sqrt(xDash ** 2 + zDash ** 2)  
+        r = np.sqrt(xDash ** 2 + zDash ** 2)
         # radial distance of rDash from coil centre
         # !!NOTE!! within this function, r is treated as a **radius** and not as a vector position
 
@@ -540,11 +526,11 @@ class RectangularCoil(Magnet):
     name: str, optional
         Human readable label for the magnet
     """
+
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
         super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self._write_magnet_limits()
         return
-
 
     def _write_magnet_limits(self):
         self.axD = self.dimsDash["axDash"] / 2
@@ -560,7 +546,6 @@ class RectangularCoil(Magnet):
             ]
             self.coordinates[:, i] = self.rotate_to_normal_frame(np.array(c))
         return
-
 
     def get_BDash_field(self, rDash):
         prefactor = mu0 * self.strength / (4 * pi)
@@ -639,11 +624,11 @@ class PermanentMagnet(Magnet):
     name: str, optional
         Human readable label for the magnet
     """
+
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
         super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self._write_magnet_limits()
         pass
-
 
     def _write_magnet_limits(self):
         """Calculate the position of the magnet verticies in the dash coordinate frame.
@@ -731,7 +716,6 @@ class PermanentMagnet(Magnet):
         self.arrow = [arrow_start, arrow_stop]
         pass
 
-
     def plot_magnet_position(self, axes, projection):
         a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
         ndim = helpers._get_axes_ndim(axes)
@@ -749,7 +733,6 @@ class PermanentMagnet(Magnet):
                 axes.plot(face[a1p], face[a2p], face[a3p], self.fmat)
             # arrows not currently supported in 3D
         return
-
 
     def get_BDash_field(self, rDash):
         BxDash = 0
@@ -772,9 +755,11 @@ class PermanentMagnet(Magnet):
                         )
                     )
                     ByDash += Q * np.arctan(
-                        xiDash * zkDash
+                        xiDash
+                        * zkDash
                         / (
-                            yjDash * np.sqrt(
+                            yjDash
+                            * np.sqrt(
                                 np.power(xiDash, 2)
                                 + np.power(yjDash, 2)
                                 + np.power(zkDash, 2)
@@ -823,6 +808,7 @@ class CoilPair(MagnetGroup):
     name: str, optional
         Human readable label for the magnet
     """
+
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
         super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self._create_magnets()
@@ -835,19 +821,35 @@ class CoilPair(MagnetGroup):
         elif conf_str in PairConfigString.ANTIHELMHOLTZ:
             conf = -1
         else:
-            raise ValueError(f"Value `{conf_str}` not understood for keyword 'configuration'")
-        
+            raise ValueError(
+                f"Value `{conf_str}` not understood for keyword 'configuration'"
+            )
+
         half_spacing = self.dimsDash["full spacing"] / 2
         spatial = self.dimsDash["spatially distributed"]
-        upper_origin = self.rDash + (0, half_spacing, 0)        
-        upper_magnet = MagnetGroup(self.strength, upper_origin, self.dimsDash, self.theta_deg, self.phi_deg, self.name)
+        upper_origin = self.rDash + (0, half_spacing, 0)
+        upper_magnet = MagnetGroup(
+            self.strength,
+            upper_origin,
+            self.dimsDash,
+            self.theta_deg,
+            self.phi_deg,
+            self.name,
+        )
         self.magnets.append(upper_magnet)
-        
-        lower_origin = self.rDash + (0, -half_spacing, 0)        
+
+        lower_origin = self.rDash + (0, -half_spacing, 0)
         lower_dims = self.dimsDash.copy()
         if spatial:
             lower_dims["axial spacing"] *= -1
-        lower_magnet = MagnetGroup(conf*self.strength, lower_origin, lower_dims, self.theta_deg, self.phi_deg, self.name)
+        lower_magnet = MagnetGroup(
+            conf * self.strength,
+            lower_origin,
+            lower_dims,
+            self.theta_deg,
+            self.phi_deg,
+            self.name,
+        )
         self.magnets.append(lower_magnet)
         return
 
@@ -861,41 +863,41 @@ class MagnetType:
 
 class MagnetTypeString:
     RECT = (
-            "rect",
-            "rectangular",
-            "r",
-            "square",
-            "cube",
-            "cubic",
-        )
+        "rect",
+        "rectangular",
+        "r",
+        "square",
+        "cube",
+        "cubic",
+    )
     CIRC = (
-            "circ",
-            "circular",
-            "round",
-            "c",
-            "spherical",
-            "cylindrical",
-            "cylinder",
-        )
+        "circ",
+        "circular",
+        "round",
+        "c",
+        "spherical",
+        "cylindrical",
+        "cylinder",
+    )
     PERM = (
-            "perm",
-            "permanent",
-            "p",
-            "rare-earth",
-        )
+        "perm",
+        "permanent",
+        "p",
+        "rare-earth",
+    )
 
 
 class PairConfigString:
     HELMHOLTZ = (
-            "hh",
-            "helmholtz",
-            "helm-holtz",
-            "homogenous",
-            )
+        "hh",
+        "helmholtz",
+        "helm-holtz",
+        "homogenous",
+    )
     ANTIHELMHOLTZ = (
-            "ahh",
-            "antihelmholtz",
-            "anti-helmholtz",
-            "antihelm-holtz",
-            "anti-helm-holtz",
-            )
+        "ahh",
+        "antihelmholtz",
+        "anti-helmholtz",
+        "antihelm-holtz",
+        "anti-helm-holtz",
+    )

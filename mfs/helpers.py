@@ -12,7 +12,7 @@ _array_like = (list, tuple, np.ndarray, np.ma.MaskedArray)
 _ncpu = multiprocessing.cpu_count()
 
 _FORMAT_YAML = (".yaml", ".yml")
-_FORMAT_JSON = (".json", )
+_FORMAT_JSON = (".json",)
 
 
 """Rotation functions"""
