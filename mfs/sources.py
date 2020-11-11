@@ -87,7 +87,7 @@ class Magnet(object):
         return
 
     def __iter__(self):
-        return self
+        return iter( (self, ))
 
     def __next__(self):
         if self.idx == 0:
@@ -98,6 +98,10 @@ class Magnet(object):
             raise StopIteration
 
     def __len__(self):
+        return 1
+
+    @property
+    def size(self):
         return 1
 
     @property
@@ -302,8 +306,10 @@ class MagnetGroup(Magnet):
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
         super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self.magnets = []
-        self._make_magnets()
         return
+
+    def __iter__(self):
+        return iter(self.magnets)
 
     def __next__(self):
         self.idx += 1
@@ -315,6 +321,28 @@ class MagnetGroup(Magnet):
 
     def __len__(self):
         return len(self.magnets)
+
+    @property
+    def size(self):
+        return len(self.magnets)
+
+    def get_BDash_field(self, rDash):
+        BDash = np.zeros(3)
+        for m in self.magnets:
+            BDash += m.get_BDash_field(rDash)
+        return BDash
+
+    def plot_magnet_position(self, axes, projection):
+        for m in self.magnets:
+            m.plot_magnet_position(axes, projection)
+        return
+
+class CoilGroup(MagnetGroup):
+    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
+        super().__init__(strength, rDash, dimsDash, theta, phi, name)
+        self._make_magnets()
+        return
+
 
     def _make_magnets(self):
         """Create the set of basic magnets specified
@@ -344,7 +372,7 @@ class MagnetGroup(Magnet):
             # Create many indpendent coils
             for ax in range(layers_ax):
                 for rad in range(layers_rad):
-                    origin = self.rDash + (0, ax * spacing_ax, 0)
+                    origin = self.rDash.copy() + (0, ax * spacing_ax, 0)
                     dims = self.dimsDash.copy()
                     if self.base == MagnetType.RECT:
                         # Recall: full length, so expands by double the spacing
@@ -362,26 +390,15 @@ class MagnetGroup(Magnet):
             name = f"{self.name}:combined"
             m = self.base(
                 self.strength * layers_ax * layers_rad,
-                self.rDash,
-                self.dimsDash,
+                self.rDash.copy(),
+                self.dimsDash.copy(),
                 self.theta_deg,
                 self.phi_deg,
                 name,
             )
             self.magnets.append(m)
         return
-
-    def get_BDash_field(self, rDash):
-        BDash = np.zeros(3)
-        for m in self.magnets:
-            BDash += m.get_BDash_field(rDash)
-        return BDash
-
-    def plot_magnet_position(self, axes, projection):
-        for m in self.magnets:
-            m.plot_magnet_position(axes, projection)
-        return
-
+        
 
 class CircularCoil(Magnet):
     """A representation of a single circular EM coil. The coil is defined as having 
@@ -815,6 +832,9 @@ class CoilPair(MagnetGroup):
         return
 
     def _create_magnets(self):
+        """
+        Make the actual magnets
+        """
         conf_str = self.dimsDash["configuration"].lower()
         if conf_str in PairConfigString.HELMHOLTZ:
             conf = 1
@@ -827,8 +847,8 @@ class CoilPair(MagnetGroup):
 
         half_spacing = self.dimsDash["full spacing"] / 2
         spatial = self.dimsDash["spatially distributed"]
-        upper_origin = self.rDash + (0, half_spacing, 0)
-        upper_magnet = MagnetGroup(
+        upper_origin = self.rDash.copy() + (0, half_spacing, 0)
+        upper_magnet = CoilGroup(
             self.strength,
             upper_origin,
             self.dimsDash,
@@ -836,13 +856,13 @@ class CoilPair(MagnetGroup):
             self.phi_deg,
             self.name,
         )
-        self.magnets.append(upper_magnet)
+        self.magnets += upper_magnet
 
-        lower_origin = self.rDash + (0, -half_spacing, 0)
+        lower_origin = self.rDash.copy() - (0, half_spacing, 0)
         lower_dims = self.dimsDash.copy()
         if spatial:
             lower_dims["axial spacing"] *= -1
-        lower_magnet = MagnetGroup(
+        lower_magnet = CoilGroup(
             conf * self.strength,
             lower_origin,
             lower_dims,
@@ -850,7 +870,7 @@ class CoilPair(MagnetGroup):
             self.phi_deg,
             self.name,
         )
-        self.magnets.append(lower_magnet)
+        self.magnets += lower_magnet
         return
 
 

@@ -56,6 +56,7 @@ def test_base_magnet_class():
         m.theta = angle
         assert np.isclose(radians(angle), m.phi)
         assert np.isclose(radians(angle), m.theta)
+
     return
 
 
@@ -76,6 +77,9 @@ def test_inits():
             dims_invalid.pop(key)
             with pytest.raises(KeyError):
                 dut(strength, origin, dims_invalid, theta, phi)
+    m = sources.CoilPair(strength, origin, dims_pair_circ, theta, phi)
+    expected_number = dims_pair_circ["axial layers"] * dims_pair_circ["radial layers"] * 2
+    assert m.size == expected_number
     return
 
 

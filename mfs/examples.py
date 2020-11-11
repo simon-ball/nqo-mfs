@@ -70,7 +70,7 @@ def permanent_magnets():
     )
     if not DEBUG:
         plt.show()
-    return
+    return magnets
 
 
 def rectangular_coil_pair():
@@ -125,7 +125,7 @@ def rectangular_coil_pair():
     )
     if not DEBUG:
         plt.show()
-    return
+    return mag
 
 
 def circular_coil_pair():
@@ -147,8 +147,8 @@ def circular_coil_pair():
         "spatially distributed": True,
         "axial layers": 3,
         "radial layers": 3,
-        "axial spacing": 0.001,
-        "radial spacing": 0.002,
+        "axial spacing": 0.03,
+        "radial spacing": 0.02,
         "shape": "circ",
         "configuration": "ahh",
     }
@@ -190,4 +190,4 @@ def circular_coil_pair():
     )
     if not DEBUG:
         plt.show()
-    return
+    return mag
