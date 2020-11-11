@@ -18,6 +18,7 @@ Overview
 .. rubric:: Combined magnets
 
 .. autosummary::
+    mfs.sources.CoilGroup
     mfs.sources.CoilPair
 
 
@@ -25,6 +26,7 @@ Overview
 
 .. autosummary::
     mfs.sources.Magnet
+    mfs.sources.MagnetGroup
 
 
 Detailed Documentation

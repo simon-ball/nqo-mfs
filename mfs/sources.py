@@ -87,7 +87,7 @@ class Magnet(object):
         return
 
     def __iter__(self):
-        return iter( (self, ))
+        return iter((self,))
 
     def __next__(self):
         if self.idx == 0:
@@ -322,100 +322,6 @@ class MagnetGroup(Magnet):
             m.plot_magnet_position(axes, projection)
         return
 
-class CoilGroup(MagnetGroup):
-    """A group of coils
-    
-    Parameters
-    ----------
-    strength: float
-        Current flowing through coils
-    rDash: 3 entry list or array
-        Origin of coils in Dash co-ordinate frame
-    dimsDash: dict
-        Dictionary of coil pair parameters.
-        
-        * ``spatially distributed``: bool
-            Should the programme calculate for each loop independently, or approximate by placing all coils in the same place?
-        * ``axial layers``: int
-            number of new layers further out along the yDash axis
-        * ``axial spacing``: float
-            distance between centres of layers in the axial direction
-        * ``radial layers``: int
-            number of new layers further out away from yDash axis
-        * ``radial spacing``: float
-            distance between centres of layers in the radial direction
-        * ``shape``: str
-            Valid entries are variations on ``circ``, ``circular``, ``rectangular``, ``r``, etc
-        * Required parameters for either ``RectangularCoil`` or ``CircularCoil``
-          (see the documentaiton for those classes)
-    theta: float, optional
-        Rotation of Dash frame around Z axis
-    phi: float, optional
-        Rotation of Dash frame around X axis
-    name: str, optional
-        Human readable label for the magnet
-    """
-    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
-        super().__init__(strength, rDash, dimsDash, theta, phi, name)
-        self._make_magnets()
-        return
-
-
-    def _make_magnets(self):
-        """Create the set of basic magnets specified
-        """
-        # Shape
-        shape = self.dimsDash["shape"].lower()
-        if shape in MagnetTypeString.RECT:
-            self.base = MagnetType.RECT
-        elif shape in MagnetTypeString.CIRC:
-            self.base = MagnetType.CIRC
-        elif shape in MagnetTypeString.PERM:
-            self.base = MagnetType.PERM
-            raise NotImplementedError(
-                "A group of permanent magnets is not currently supported"
-            )
-        else:
-            raise ValueError(f"Value `{shape}` not understood for keyword `shape`")
-        # Verify that other keywords are present
-        spatial = self.dimsDash["spatially distributed"]
-        layers_ax = self.dimsDash["axial layers"]
-        layers_rad = self.dimsDash["radial layers"]
-        if spatial:
-            spacing_ax = self.dimsDash["axial spacing"]
-            spacing_rad = self.dimsDash["radial spacing"]
-        # Initialise the relevant magnets
-        if spatial:
-            # Create many indpendent coils
-            for ax in range(layers_ax):
-                for rad in range(layers_rad):
-                    origin = self.rDash.copy() + (0, ax * spacing_ax, 0)
-                    dims = self.dimsDash.copy()
-                    if self.base == MagnetType.RECT:
-                        # Recall: full length, so expands by double the spacing
-                        dims["axDash"] += 2 * rad * spacing_rad
-                        dims["azDash"] += 2 * rad * spacing_rad
-                    elif self.base == MagnetType.CIRC:
-                        dims["radius"] += rad * spacing_rad
-                    name = f"{self.name}:{ax}:{rad}"
-                    m = self.base(
-                        self.strength, origin, dims, self.theta_deg, self.phi_deg, name
-                    )
-                    self.magnets.append(m)
-        else:
-            # Create a single coil with an increased current
-            name = f"{self.name}:combined"
-            m = self.base(
-                self.strength * layers_ax * layers_rad,
-                self.rDash.copy(),
-                self.dimsDash.copy(),
-                self.theta_deg,
-                self.phi_deg,
-                name,
-            )
-            self.magnets.append(m)
-        return
-        
 
 class CircularCoil(Magnet):
     """A representation of a single circular EM coil. The coil is defined as having 
@@ -804,9 +710,119 @@ class PermanentMagnet(Magnet):
         return BDash
 
 
+class CoilGroup(MagnetGroup):
+    """A group of coils
+    
+    Currently only supports electromagnetic coils, either Circular or Rectangular.
+    Stacks coils axially and radially around the same axis. Given a positive value
+    of ``axial spacing``, then the coil will grow axially along the positive
+    yDash direction
+    
+    Supports two simulation option: multiple coils within the group, located at
+    different physical locations, can be simulated independently. 
+    
+    Alternatively, the coil can be simulated as a single coil, with
+    increased current flowing through it. This is much faster, but less accurate,
+    especially where the coil dimensions are such that the spatial extent of the
+    individual coils is large relative to the distance to the measurement point
+    
+    Parameters
+    ----------
+    strength: float
+        Current flowing through coils
+    rDash: 3 entry list or array
+        Origin of coils in Dash co-ordinate frame
+    dimsDash: dict
+        Dictionary of coil pair parameters.
+        
+        * ``spatially distributed``: bool
+            Should the programme calculate for each loop independently, or approximate by placing all coils in the same place?
+        * ``axial layers``: int
+            number of new layers further out along the yDash axis
+        * ``axial spacing``: float
+            distance between centres of layers in the axial direction
+        * ``radial layers``: int
+            number of new layers further out away from yDash axis
+        * ``radial spacing``: float
+            distance between centres of layers in the radial direction
+        * ``shape``: str
+            Valid entries are variations on ``circ``, ``circular``, ``rectangular``, ``r``, etc
+        * Required parameters for either ``RectangularCoil`` or ``CircularCoil``
+          (see the documentaiton for those classes)
+    theta: float, optional
+        Rotation of Dash frame around Z axis
+    phi: float, optional
+        Rotation of Dash frame around X axis
+    name: str, optional
+        Human readable label for the magnet
+    """
+
+    def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
+        super().__init__(strength, rDash, dimsDash, theta, phi, name)
+        self._make_magnets()
+        return
+
+    def _make_magnets(self):
+        """Create the set of basic magnets specified
+        """
+        # Shape
+        shape = self.dimsDash["shape"].lower()
+        if shape in MagnetTypeString.RECT:
+            self.base = MagnetType.RECT
+        elif shape in MagnetTypeString.CIRC:
+            self.base = MagnetType.CIRC
+        elif shape in MagnetTypeString.PERM:
+            self.base = MagnetType.PERM
+            raise NotImplementedError(
+                "A group of permanent magnets is not currently supported"
+            )
+        else:
+            raise ValueError(f"Value `{shape}` not understood for keyword `shape`")
+        # Verify that other keywords are present
+        spatial = self.dimsDash["spatially distributed"]
+        layers_ax = self.dimsDash["axial layers"]
+        layers_rad = self.dimsDash["radial layers"]
+        if spatial:
+            spacing_ax = self.dimsDash["axial spacing"]
+            spacing_rad = self.dimsDash["radial spacing"]
+        # Initialise the relevant magnets
+        if spatial:
+            # Create many indpendent coils
+            for ax in range(layers_ax):
+                for rad in range(layers_rad):
+                    origin = self.rDash.copy() + (0, ax * spacing_ax, 0)
+                    dims = self.dimsDash.copy()
+                    if self.base == MagnetType.RECT:
+                        # Recall: full length, so expands by double the spacing
+                        dims["axDash"] += 2 * rad * spacing_rad
+                        dims["azDash"] += 2 * rad * spacing_rad
+                    elif self.base == MagnetType.CIRC:
+                        dims["radius"] += rad * spacing_rad
+                    name = f"{self.name}:{ax}:{rad}"
+                    m = self.base(
+                        self.strength, origin, dims, self.theta_deg, self.phi_deg, name
+                    )
+                    self.magnets.append(m)
+        else:
+            # Create a single coil with an increased current
+            name = f"{self.name}:combined"
+            m = self.base(
+                self.strength * layers_ax * layers_rad,
+                self.rDash.copy(),
+                self.dimsDash.copy(),
+                self.theta_deg,
+                self.phi_deg,
+                name,
+            )
+            self.magnets.append(m)
+        return
+
+
 class CoilPair(MagnetGroup):
-    """A generic pair of coils. They can both be circular or rectangular, and
-    either Helmholtz or Anti-Helmholtz.
+    """A generic pair of CoilGroups, separated in space
+    
+    Includes space between the two CoilGroups. Supports either Helmholtz or
+    anti-Helmholtz current configuration.
     
     Parameters
     ----------
