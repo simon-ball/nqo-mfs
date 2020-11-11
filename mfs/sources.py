@@ -280,21 +280,6 @@ class MagnetGroup(Magnet):
         Origin of coils in Dash co-ordinate frame
     dimsDash: dict
         Dictionary of coil pair parameters.
-        
-        * ``spatially distributed``: bool
-            Should the programme calculate for each loop independently, or approximate by placing all coils in the same place?
-        * ``axial layers``: int
-            number of new layers further out along the yDash axis
-        * ``axial spacing``: float
-            distance between centres of layers in the axial direction
-        * ``radial layers``: int
-            number of new layers further out away from yDash axis
-        * ``radial spacing``: float
-            distance between centres of layers in the radial direction
-        * ``shape``: str
-            Valid entries are variations on ``circ``, ``circular``, ``rectangular``, ``r``, etc
-        * Required parameters for either ``RectangularCoil`` or ``CircularCoil``
-          (see the documentaiton for those classes)
     theta: float, optional
         Rotation of Dash frame around Z axis
     phi: float, optional
@@ -338,6 +323,38 @@ class MagnetGroup(Magnet):
         return
 
 class CoilGroup(MagnetGroup):
+    """A group of coils
+    
+    Parameters
+    ----------
+    strength: float
+        Current flowing through coils
+    rDash: 3 entry list or array
+        Origin of coils in Dash co-ordinate frame
+    dimsDash: dict
+        Dictionary of coil pair parameters.
+        
+        * ``spatially distributed``: bool
+            Should the programme calculate for each loop independently, or approximate by placing all coils in the same place?
+        * ``axial layers``: int
+            number of new layers further out along the yDash axis
+        * ``axial spacing``: float
+            distance between centres of layers in the axial direction
+        * ``radial layers``: int
+            number of new layers further out away from yDash axis
+        * ``radial spacing``: float
+            distance between centres of layers in the radial direction
+        * ``shape``: str
+            Valid entries are variations on ``circ``, ``circular``, ``rectangular``, ``r``, etc
+        * Required parameters for either ``RectangularCoil`` or ``CircularCoil``
+          (see the documentaiton for those classes)
+    theta: float, optional
+        Rotation of Dash frame around Z axis
+    phi: float, optional
+        Rotation of Dash frame around X axis
+    name: str, optional
+        Human readable label for the magnet
+    """
     def __init__(self, strength, rDash, dimsDash, theta=0, phi=0, name=None):
         super().__init__(strength, rDash, dimsDash, theta, phi, name)
         self._make_magnets()
