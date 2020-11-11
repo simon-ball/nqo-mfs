@@ -35,6 +35,6 @@ setup(
     name="mfs",
     packages=find_packages(include=["mfs*"]),
     url="https://github.com/simon-ball/nqo-mfs",
-    version="1.2.0",
+    version="1.3.0",
     zip_safe=False,
 )
