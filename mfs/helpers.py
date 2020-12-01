@@ -58,7 +58,11 @@ def rotate_around_x(phi):
         vector around the X-axis by theta
     """
     return np.array(
-        [[1, 0, 0], [0, np.cos(phi), -np.sin(phi)], [0, np.sin(phi), np.cos(phi)]]
+        [
+            [1, 0, 0],
+            [0, np.cos(phi), -np.sin(phi)],
+            [0, np.sin(phi), np.cos(phi)]
+        ]
     )
 
 
@@ -325,6 +329,42 @@ def plot_scalar_B_field(magnets, axes, centre, limit, projection, points):
     return axis, B_field
 
 
+def unwrap(magnets):
+    """Given a list of magnets, some of which might be MagnetGroups, break the
+    list down to a "1d" list, i.e. where each member is individual
+    
+    This is mostly important for paralellising calculations on many magnets:
+    since each magnet is farmed out as a separate job, ideally each job should
+    be as similar in size as possible, rather than some processes being small
+    (e.g. a single CircularCoil) and others being huge (e.g. a spatially
+    distributed CoilPair)
+    
+    Parameters
+    ----------
+    magnets: list of magnets, or list-like magnet
+        The set of magnets to unwrap to a flat list
+    
+    Returns
+    -------
+    list
+        a flattened list of individual magnets. No members are instances of
+        MagnetGroup
+    """
+    
+    if not isinstance(magnets, (*_array_like, sources.MagnetGroup)):
+        raise TypeError(f"Must provide a list-like input")
+    output = []
+    for i, single in enumerate(magnets):
+        if isinstance(single, (*_array_like, sources.MagnetGroup)):
+            flattened_list = unwrap(single)
+            output += flattened_list
+        elif isinstance(single, sources.Magnet):
+            output.append(single)
+        else:
+            raise TypeError(f"Element {i} of input is not a valid magnet type ({type(single)})")
+    return output
+    
+
 def plot_vector_B_field(
     magnets, axes, centre, limit, projection, points=50, threads=_ncpu
 ):
@@ -379,12 +419,7 @@ def plot_vector_B_field(
     # Therefore, if any CoilPairs are present, unwrap them into a single flat list containing the individual coils
     # This is not recursive, it assume there is only 1 level of wrapping, e.g. CoilPairs.
     # Offers about a 15-20% speedup on YQOMagnets
-    unwrapped = []
-    for magnet in magnets:
-        if isinstance(magnet, sources.CoilPair):
-            unwrapped += magnet.magnets
-        else:
-            unwrapped.append(magnet)
+    unwrapped = unwrap(magnets)
 
     a1p, a2p, a3p = evaluate_axis_projection(projection)
     # This converts the projection into indicies. e.g. "zxy" will
