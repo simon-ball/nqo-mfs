@@ -26,6 +26,8 @@ from .version import __version__
 pi = np.pi
 mu0 = 4 * pi * 1e-7
 
+LINESTYLE = "solid"
+
 
 class Magnet(object):
     """A representation of a generic magnetic field source (e.g. permanent magnet,
@@ -80,7 +82,7 @@ class Magnet(object):
         self.rDash = np.array(rDash)
         self.dimsDash = dimsDash.copy()
         self.name = name
-        self.fmat = random.sample(["b", "g", "r", "c", "m", "y", "k"], 1)[0] + "-"
+        self._colour = random.sample(["b", "g", "r", "c", "m", "y", "k"], 1)[0]
         # This is a bit of a fudge - pick a colour for use in plotting this magnet in future.
         # This is relevant where a single magnet may be plotted as several separate lines in matplotlib
         # i.e. either a rectangular PermanentMagnet or a CoilPair
@@ -99,6 +101,13 @@ class Magnet(object):
 
     def __len__(self):
         return 1
+
+    @property
+    def colour(self):
+        return self._colour
+
+    def set_colour(self, c):
+        self._colour = c
 
     @property
     def size(self):
@@ -228,14 +237,15 @@ class Magnet(object):
             axes.set_ylabel(projection[1])
         except:
             pass
+        plotting_args = {"color": self.colour, "linestyle": LINESTYLE}
         if helpers._get_axes_ndim(axes) == 2:
-            axes.plot(self.coordinates[a1p], self.coordinates[a2p], self.fmat)
+            axes.plot(self.coordinates[a1p], self.coordinates[a2p], **plotting_args)
         elif helpers._get_axes_ndim(axes) == 3:
             axes.plot(
                 self.coordinates[a1p],
                 self.coordinates[a2p],
                 self.coordinates[a3p],
-                self.fmat,
+                **plotting_args,
             )
             axes.set_zlabel(projection[a3p])
         return
@@ -306,6 +316,15 @@ class MagnetGroup(Magnet):
 
     def __len__(self):
         return len(self.magnets)
+    
+    @property
+    def colour(self):
+        return self._colour
+
+    def set_colour(self, c):
+        self._colour = c
+        for m in self.magnets:
+            m.set_colour(c)
 
     @property
     def size(self):
@@ -659,9 +678,10 @@ class PermanentMagnet(Magnet):
     def plot_magnet_position(self, axes, projection):
         a1p, a2p, a3p = helpers.evaluate_axis_projection(projection)
         ndim = helpers._get_axes_ndim(axes)
+        plotting_args = {"color": self.colour, "linestyle": LINESTYLE}
         if ndim == 2:
             for face in self.faces:
-                axes.plot(face[a1p], face[a2p], self.fmat)
+                axes.plot(face[a1p], face[a2p], **plotting_args)
             axes.arrow(
                 self.arrow[0][a1p],
                 self.arrow[0][a2p],
@@ -670,7 +690,7 @@ class PermanentMagnet(Magnet):
             )
         elif ndim == 3:
             for face in self.faces:
-                axes.plot(face[a1p], face[a2p], face[a3p], self.fmat)
+                axes.plot(face[a1p], face[a2p], face[a3p], **plotting_args)
             # arrows not currently supported in 3D
         return
 
@@ -815,6 +835,7 @@ class CoilGroup(MagnetGroup):
                 name,
             )
             self.magnets.append(m)
+        self.set_colour(self.colour)
         return
 
 
@@ -904,6 +925,7 @@ class CoilPair(MagnetGroup):
             self.name,
         )
         self.magnets += lower_magnet
+        self.set_colour(self.colour)
         return
 
 
