@@ -21,29 +21,34 @@ dims_rect = {"axDash": 1, "azDash": 2}
 # Rectangular permanent magnet
 dims_perm = {"axDash": 1, "ayDash": 2, "azDash": 3}
 
-# Coil pair
-dims_pair = {
-    "full spacing": 0.5,
+# Coil group
+dims_group = {
     "spatially distributed": True,
     "axial layers": 2,
     "axial spacing": 0.1,
     "radial layers": 3,
     "radial spacing": 0.02,
-    "configuration": "hh",
 }
-dims_pair_rect = {**dims_pair, **dims_rect, "shape": "rect"}
-dims_pair_circ = {**dims_pair, **dims_circ, "shape": "circ"}
+
+dims_group_rect = {**dims_group, **dims_rect, "shape": "rect"}
+dims_group_circ = {**dims_group, **dims_circ, "shape": "circ"}
+
+# Coil pair
+dims_pair_rect = {**dims_group_rect, "full spacing": 0.5, "configuration": "hh"}
+dims_pair_circ = {**dims_group_circ, "full spacing": 0.5, "configuration": "ahh"}
 
 magnet_dims_mapping = [
     (sources.CircularCoil, dims_circ),
     (sources.RectangularCoil, dims_rect),
     (sources.PermanentMagnet, dims_perm),
+    (sources.CoilGroup, dims_group_circ),
+    (sources.CoilGroup, dims_group_rect),
     (sources.CoilPair, dims_pair_rect),
     (sources.CoilPair, dims_pair_circ),
 ]
 
 
-def test_base_magnet_class():
+def test_base_magnet():
     """Tests that the base class can be initialised, and offers the correct
     interface"""
     m = sources.Magnet(strength=0, rDash=(0, 0, 0), dimsDash={}, theta=0, phi=0)
@@ -56,11 +61,10 @@ def test_base_magnet_class():
         m.theta = angle
         assert np.isclose(radians(angle), m.phi)
         assert np.isclose(radians(angle), m.theta)
-
     return
 
 
-def test_inits():
+def test_init_valid_invalid():
     """Test that each magnet can be initialised given correct dimensional arguments
     and that it cannot given missing or invalid dimensional arguments"""
     origin = (-1, -2, 3)
