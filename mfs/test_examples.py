@@ -1,7 +1,7 @@
 from . import examples
 
 
-def test_exmaple_permanent_magnets():
+def test_example_permanent_magnets():
     examples.DEBUG = True
     examples.permanent_magnets()
     examples.plt.close("all")
