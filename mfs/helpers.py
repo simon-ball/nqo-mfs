@@ -1,5 +1,6 @@
 import json
 import yaml
+import random
 import pathlib
 import numpy as np
 import multiprocessing
@@ -517,17 +518,6 @@ def print_field_gradient(magnets, centre, label=""):
     )
 
 
-def _get_axes_ndim(axes):
-    """
-    Quick function to determine if an Axes object is 3D (can accept x, y, z data)
-    or 2d (can only accept x, y data)
-    """
-    if hasattr(axes, "get_zlim"):
-        n = 3
-    else:
-        n = 2
-    return n
-
 
 def to_file(magnets, filepath):
     """Write the magnet state to a yaml or json configuration file
@@ -596,3 +586,19 @@ def from_file(filepath):
         m = mtype._from_dict(magnet)
         output.append(m)
     return output
+
+
+def _get_axes_ndim(axes):
+    """
+    Quick function to determine if an Axes object is 3D (can accept x, y, z data)
+    or 2d (can only accept x, y data)
+    """
+    if hasattr(axes, "get_zlim"):
+        n = 3
+    else:
+        n = 2
+    return n
+
+def _generate_random_colour():
+    """Generate a random 6 digits hexadecimal number to use as a colour"""
+    return "#%06x" % random.randint(0, 0xFFFFFF)

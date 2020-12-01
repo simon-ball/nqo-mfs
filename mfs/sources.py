@@ -13,7 +13,6 @@ phi (rotation around X).
 Functions are provided for visualising the position of each magnet in various
 projections. 
 """
-import random
 import numpy as np
 from numpy import cos, sin, sqrt, power
 from scipy.special import ellipk, ellipe
@@ -82,7 +81,7 @@ class Magnet(object):
         self.rDash = np.array(rDash)
         self.dimsDash = dimsDash.copy()
         self.name = name
-        self._colour = random.sample(["b", "g", "r", "c", "m", "y", "k"], 1)[0]
+        self._colour = helpers._generate_random_colour()
         # This is a bit of a fudge - pick a colour for use in plotting this magnet in future.
         # This is relevant where a single magnet may be plotted as several separate lines in matplotlib
         # i.e. either a rectangular PermanentMagnet or a CoilPair
