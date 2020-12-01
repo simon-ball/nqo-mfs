@@ -1,8 +1,9 @@
+import tempfile
 import numpy as np
 from numpy import cos, sin, sqrt, radians
 
 
-from . import helpers
+from . import helpers, sources
 
 n = 100
 angles = np.linspace(0, 360, n)
@@ -242,4 +243,46 @@ def test_evaluate_axis_projection():
     ]
     for value in values:
         assert helpers.evaluate_axis_projection(value[0]) == value[1], value[0]
+    return
+
+def test_to_from_file():
+    """Test that the to_file and from_file functions can successfully reproduce
+    a given set of magnets"""
+    args = {
+        "spatially distributed": True,
+        "axial layers": 2,
+        "axial spacing": 0.1,
+        "radial layers": 3,
+        "radial spacing": 0.02,
+        "axDash": 1,
+        "ayDash": 2,
+        "azDash": 2,
+        "radius": 1,
+        "shape": "rect",
+        "full spacing": 0.5,
+        "configuration": "hh",
+    }
+    m1 = sources.CoilGroup(1.5, (0,0,0), args, 1,2, "Oh freddled gruntbuggly")
+    m2 = sources.CoilPair(2, (1,2,3), args, 0.4, 0.5, "Thy micturations are to me,")
+    m3 = sources.CircularCoil(2.5, (2.71, 3.14, 42), args, 0.003, 6.27, "As plurdled gabbleblotchits, in midsummer morning")
+    m4 = sources.PermanentMagnet(1.5e10, (5, 25, 125), args, -1, -1, "On a lurgid bee")
+    magnets = (m1, m2, m3, m4)
+    file_yaml = tempfile.TemporaryFile(suffix=".yaml").name
+    file_json = tempfile.TemporaryFile(suffix=".json").name
+    helpers.to_file(magnets, file_yaml)
+    helpers.to_file(magnets, file_json)
+    myaml = helpers.from_file(file_yaml)
+    mjson = helpers.from_file(file_json)
+    assert len(myaml) == len(mjson) == len(magnets)
+    for i in range(len(magnets)):
+        m = magnets[i]
+        y = myaml[i]
+        j = mjson[i]
+        assert type(y) == type(j) == type(m)
+        assert y.name == j.name == m.name
+        for param in ("rDash", "strength", "phi", "theta"):
+            y_param = getattr(y, param)
+            j_param = getattr(j, param)
+            m_param= getattr(m, param)
+            assert np.allclose(y_param, j_param) and np.allclose(j_param, m_param) and np.allclose(y_param, m_param)
     return

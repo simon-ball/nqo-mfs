@@ -4,6 +4,7 @@ from numpy import radians
 
 
 from . import helpers, sources
+from .version import __version__
 
 n = 35
 angles = np.linspace(0, 360, n)
@@ -85,6 +86,35 @@ def test_init_valid_invalid():
     expected_number = dims_pair_circ["axial layers"] * dims_pair_circ["radial layers"] * 2
     assert m.size == expected_number
     return
+
+
+def test_to_from_dict():
+    """
+    Check that the dictionary output works correctly
+    """
+    strength = 1.25
+    origin = [0,1,2]
+    theta = 0.3
+    phi = 0.5
+    name = "Oh freddled gruntbuggly"
+    m = sources.CircularCoil(strength, origin, dims_circ, theta, phi, name)
+    d = m._to_dict()
+    assert d["name"] == name
+    assert d["class"] == "CircularCoil"
+    assert np.allclose( d["strength"], strength)
+    assert np.allclose(d["theta"], theta, atol=1e-6)
+    assert np.allclose(d["phi"], phi)
+    assert d["origin"] == origin
+    assert d["dimensions"] == dims_circ
+    assert d["mfs_version"] == __version__
+    
+    m2 = sources.CircularCoil._from_dict(d)
+    assert m2.name == m.name
+    assert type(m2) == type(m)
+    assert np.allclose(m2.strength, m.strength)
+    assert np.allclose(m2.rDash, m.rDash, atol=1e-6)
+    assert np.allclose(m2.theta, m.theta)
+    assert np.allclose(m2.phi, m.phi)
 
 
 def test_group_rotation_consistency():
