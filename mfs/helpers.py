@@ -575,7 +575,7 @@ def from_file(filepath):
     suffix = filepath.suffix.lower()
     if suffix in _FORMAT_YAML:
         lib = yaml
-        kwargs = {}
+        kwargs = {"Loader": yaml.SafeLoader}
     elif suffix in _FORMAT_JSON:
         lib = json
         kwargs = {}
@@ -589,6 +589,7 @@ def from_file(filepath):
         "CircularCoil": sources.CircularCoil,
         "PermanentMagnet": sources.PermanentMagnet,
         "CoilPair": sources.CoilPair,
+        "CoilGroup": sources.CoilGroup,
     }
     for magnet in config:
         mtype = mtypes[magnet["class"]]
