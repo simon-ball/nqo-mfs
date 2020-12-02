@@ -18,7 +18,8 @@ import mfs
 
 
 def print_field_gradient(magnets, centre, label=""):
-    ''' Print the value of the B-field gradient along the x and y axes around centre in G/cm'''
+    ''' Print the value of the B-field gradient along the x and y axes around
+    centre in G/cm'''
     delta = 1e-2
     B0 = np.zeros(3)
     B1 = np.zeros(3)
@@ -37,8 +38,11 @@ def print_field_gradient(magnets, centre, label=""):
     print("%s: y axis gradient: %.3g G/cm" % (label, ((B2abs - B0abs)*1e4 / (delta/1e-2)) ))
 
 def print_field_at_3DMOT(magnets, distance=0.3):
-    ''' Print the value of the B-field, and the B-field gradient, at the position of the 3D MOT. 
-    BY convention, the 3D MOT is located in the positive Z direction at a separation from the centre of the 2D MOT given by distance'''
+    ''' Print the value of the B-field, and the B-field gradient, at the position
+    of the 3D MOT. 
+    
+    By convention, the 3D MOT is located in the positive Z direction at a separation
+    from the centre of the 2D MOT given by distance'''
     rMOT = (0,0,distance)
     delta = 0.01
     rMOTGrad = (delta, 0, distance)
@@ -53,7 +57,9 @@ def print_field_at_3DMOT(magnets, distance=0.3):
     print("Field gradient at MOT position (%d cm in +z) (x): %.3g G/cm" % (distance*100,np.linalg.norm(BMOTGrad)))
     
 def print_field_at_position(magnets, position, label):
-    '''Print the value of the B field at the table surface. This is important to determine how much protection the cell requires from, e.g., bolts and washers that will be left around during construction'''
+    '''Print the value of the B field at the table surface. This is important
+    to determine how much protection the cell requires from, e.g., bolts and
+    washers that will be left around during construction'''
     rTable = position
     BTable = np.zeros(3)
     if type(magnets) != list:
@@ -64,7 +70,8 @@ def print_field_at_position(magnets, position, label):
     print("%s: Absolute field at location %s: %.3g G" % (label, str(position), np.linalg.norm(BTable)))
     
 def plot_field_gradient_for_Z(magnets, axes, zl, zh):
-    ''' Plot the value of the B-field along the X axis at y=0 as a function of position on the Z axis'''
+    ''' Plot the value of the B-field along the X axis at y=0 as a function of
+    position on the Z axis'''
     points = 101
     axis = np.linspace(zl, zh, points)
     B_grad = np.zeros(points)
@@ -87,7 +94,8 @@ def plot_field_gradient_for_Z(magnets, axes, zl, zh):
 
 
 def plot_B_field_gradient_X(magnets, axes):
-    ''' Plot the absolute value of the B-field as a function of position along the X axis at y,z=0 '''
+    ''' Plot the absolute value of the B-field as a function of position along
+    the X axis at y,z=0 '''
     xLim = 0.04
     points = 201
     axis = np.linspace(-xLim, xLim, points)
@@ -111,8 +119,11 @@ def plot_B_field_gradient_X(magnets, axes):
 
     
 def plot_diagonal_field_pointing(axes, X, Z):
-    '''This takes the calculated output of the plot_vector_B_field routine to do a quick plot of the effect of the 2D magnets on the 3D qudrupole field.
-    To work, it requires that the aforementioned method calculates on a square grid (i.e. axOneLim == axTwoLim)'''
+    '''This takes the calculated output of the plot_vector_B_field routine to do
+    a quick plot of the effect of the 2D magnets on the 3D qudrupole field.
+    
+    To work, it requires that the aforementioned method calculates on a square
+    grid (i.e. axOneLim == axTwoLim)'''
     p = X.shape[0]
     lim = 0.055
     diag = np.zeros((2,p))
@@ -130,14 +141,18 @@ def plot_diagonal_field_pointing(axes, X, Z):
 
 if __name__ == "__main__":
     plt.close('all')
-    ''' For the YQO magnetic field setup, we make the following choices:
-        * the atomic beam propagates along the +ve direction along the Z-axis
-        * the Y-axis is vertical
-        * The X-axis therefore corresponds to the probe beam directions
-        * The origin is at the centre of the 3D MOT coils, also the location of the probe focus
-        * The 2D MOT origin is taken as the centre point of the 'Pancake' of the glass cell
-        
-        In addition, all units are SI units unless otherwise stated (metres, Tesla, Amps, etc)'''
+    '''
+    For the YQO magnetic field setup, we make the following choices:
+    * the atomic beam propagates along the +ve direction along the Z-axis
+    * the Y-axis is vertical
+    * The X-axis therefore corresponds to the probe beam directions
+    * The origin is at the centre of the 3D MOT coils, also the location of
+      the probe focus
+    * The 2D MOT origin is taken as the centre point of the 'Pancake' of the
+      glass cell
+    
+    In addition, all units are SI units unless otherwise stated (metres,
+    Tesla, Amps, etc)'''
 
  
     
@@ -250,10 +265,9 @@ if __name__ == "__main__":
     ax1.set_aspect('equal')
     ax2.set_aspect('equal')
     ax3.set_aspect('equal')
-    for mag in allMagnets:       
-        mag.plot_magnet_position(ax1, 'xy')
-        mag.plot_magnet_position(ax2, 'zy')
-        mag.plot_magnet_position(ax3, 'xz')
+    mfs.helpers.plot_magnet_positions(allMagnets, ax1, "xy")
+    mfs.helpers.plot_magnet_positions(allMagnets, ax2, "zy")
+    mfs.helpers.plot_magnet_positions(allMagnets, ax3, "xz")
     fig1.tight_layout()
     
     

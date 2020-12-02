@@ -281,6 +281,10 @@ class Magnet(object):
 class MagnetGroup(Magnet):
     """A generic group of magnets
     
+    Can be used for an arbitrary selection of magnets by appending to 
+    ``MagnetGroup.magnets``, but will interact poorly with to_file, from_file,
+    because the components are not specified in terms of the MagnetGroup creation
+    
     Parameters
     ----------
     strength: float
