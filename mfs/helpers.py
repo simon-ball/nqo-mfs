@@ -4,6 +4,7 @@ import random
 import pathlib
 import numpy as np
 import multiprocessing
+from tqdm import tqdm
 
 from . import sources
 
@@ -453,24 +454,23 @@ def plot_vector_B_field(
                 positions.append(argument)
     if not threads or threads == 1:
         print("Single threaded")
-        out = [_plot_vector_B_field_worker(argument) for argument in positions]
+        for args in tqdm(positions):
+            B_field, i, j = _plot_vector_B_field_worker(args)
+            U[i, j] += B_field[a1p]
+            V[i, j] += B_field[a2p]
+            C[i, j] += np.linalg.norm(B_field)
     else:
         # no point in using more processes than jobs:
         if threads > len(positions):
             threads = len(positions)
         print("Multiprocessing with {} processes".format(threads))
-        pool = multiprocessing.Pool(threads)
-        out = pool.map(_plot_vector_B_field_worker, positions)
-        pool.close()
-        pool.join()
-    for element in out:
-        # recover the i and j indicies to locate this actual value in the grid
-        i = element[1]
-        j = element[2]
-        B_field = element[0]
-        U[i, j] += B_field[a1p]
-        V[i, j] += B_field[a2p]
-        C[i, j] += np.linalg.norm(B_field)
+        with multiprocessing.Pool(threads) as pool:
+            with tqdm(total=len(positions)) as pbar:
+                for k, (B_field, i, j) in enumerate(pool.imap_unordered(_plot_vector_B_field_worker, positions)):
+                    pbar.update()
+                    U[i, j] += B_field[a1p]
+                    V[i, j] += B_field[a2p]
+                    C[i, j] += np.linalg.norm(B_field)
     axes.quiver(X, Y, U, V, C, alpha=0.5, pivot="mid", angles="xy")
     axes.set_aspect("equal", "datalim")
     axes.set_xlabel("%s [m]" % "xyz"[a1p])
